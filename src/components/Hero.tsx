@@ -23,10 +23,10 @@ export const Hero = () => {
               <span className="text-sm font-medium text-primary">AI-Powered Intelligence</span>
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
+            <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-foreground">
               Your Home,
               <br />
-              <span className="gradient-hero bg-clip-text text-transparent">Smarter Every Day</span>
+              <span className="text-primary">Smarter Every Day</span>
             </h1>
 
             <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">
@@ -42,6 +42,18 @@ export const Hero = () => {
               <Button variant="outline" size="lg">
                 Watch Demo
               </Button>
+            </div>
+
+            {/* Indian Languages Support */}
+            <div className="flex flex-wrap items-center gap-3 pt-4">
+              <span className="text-sm text-muted-foreground">Available in:</span>
+              <div className="flex flex-wrap gap-2">
+                {["हिंदी", "தமிழ்", "తెలుగు", "ಕನ್ನಡ", "മലയാളം", "বাংলা", "ગુજરાતી", "मराठी"].map((lang) => (
+                  <span key={lang} className="px-2 py-1 bg-primary/5 text-primary text-xs font-medium rounded-md border border-primary/10">
+                    {lang}
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Stats */}

@@ -11,7 +11,7 @@ export const Navigation = () => {
             <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold gradient-hero bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-primary">
               Kleio.ai
             </span>
           </div>
