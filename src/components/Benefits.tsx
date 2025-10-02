@@ -41,9 +41,9 @@ export const Benefits = () => {
     <section className="py-24 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 animate-fade-in">
-          <h2 className="text-4xl lg:text-5xl font-bold">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
             Real Impact,
-            <span className="gradient-hero bg-clip-text text-transparent"> Measured Results</span>
+            <span className="text-primary"> Measured Results</span>
           </h2>
           <p className="text-xl text-muted-foreground">
             Join thousands of Indian families already transforming their households

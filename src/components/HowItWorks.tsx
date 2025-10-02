@@ -35,9 +35,9 @@ export const HowItWorks = () => {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 animate-fade-in">
-          <h2 className="text-4xl lg:text-5xl font-bold">
+          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
             Getting Started Is
-            <span className="gradient-accent bg-clip-text text-transparent"> Effortless</span>
+            <span className="text-accent"> Effortless</span>
           </h2>
           <p className="text-xl text-muted-foreground">
             Four simple steps to transform your household management
