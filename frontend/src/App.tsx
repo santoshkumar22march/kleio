@@ -9,7 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
-import Dashboard from "./pages/Dashboard";
+import DashboardEnhanced from "./pages/DashboardEnhanced";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,12 +37,12 @@ const App = () => (
             {/* App Routes (Protected) */}
             <Route path="/app/dashboard" element={
               <ProtectedRoute>
-                <Dashboard />
+                <DashboardEnhanced />
               </ProtectedRoute>
             } />
             <Route path="/app/*" element={
               <ProtectedRoute>
-                <Dashboard />
+                <DashboardEnhanced />
               </ProtectedRoute>
             } />
             
