@@ -56,6 +56,7 @@ const RecipeGenerator = () => {
   const [cookingTime, setCookingTime] = useState<string>('45');
   const [mealType, setMealType] = useState<string>('any');
   const [cuisine, setCuisine] = useState<string>('Indian');
+  const [mustUseItems, setMustUseItems] = useState<string[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<Recipe | null>(null);
@@ -73,7 +74,12 @@ const RecipeGenerator = () => {
 
   // Generate recipe mutation
   const generateRecipeMutation = useMutation({
-    mutationFn: async (filters: { cooking_time: number; meal_type: string; cuisine: string }) => {
+    mutationFn: async (filters: { 
+      cooking_time: number; 
+      meal_type: string; 
+      cuisine: string;
+      must_use_items?: string[];
+    }) => {
       const response = await api.post('/api/ai/generate-recipe', filters);
       return response.data;
     },
@@ -103,11 +109,26 @@ const RecipeGenerator = () => {
       return;
     }
 
-    generateRecipeMutation.mutate({
+    const filters: any = {
       cooking_time: parseInt(cookingTime),
       meal_type: mealType,
       cuisine: cuisine,
-    });
+    };
+
+    // Add must_use_items only if not empty
+    if (mustUseItems.length > 0) {
+      filters.must_use_items = mustUseItems;
+    }
+
+    generateRecipeMutation.mutate(filters);
+  };
+
+  const handleToggleMustUseItem = (itemName: string) => {
+    setMustUseItems(prev => 
+      prev.includes(itemName) 
+        ? prev.filter(i => i !== itemName)
+        : [...prev, itemName]
+    );
   };
 
   const handleViewRecipe = (recipe: Recipe) => {
@@ -215,6 +236,39 @@ const RecipeGenerator = () => {
               </div>
             </div>
 
+            {/* Must Use Items (Optional) */}
+            <div className="space-y-2 mt-6">
+              <Label>Must-Use Ingredients (Optional)</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Select specific items you want to use in the recipe
+              </p>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-md">
+                {inventory && inventory.length > 0 ? (
+                  inventory.slice(0, 30).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleToggleMustUseItem(item.item_name)}
+                      className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                        mustUseItems.includes(item.item_name)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80'
+                      }`}
+                    >
+                      {item.item_name}
+                    </button>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">No items available</span>
+                )}
+              </div>
+              {mustUseItems.length > 0 && (
+                <p className="text-xs text-primary font-medium">
+                  {mustUseItems.length} item{mustUseItems.length > 1 ? 's' : ''} selected
+                </p>
+              )}
+            </div>
+
             <Button 
               onClick={handleGenerateRecipe} 
               disabled={generateRecipeMutation.isPending}
@@ -305,6 +359,12 @@ const RecipeGenerator = () => {
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
         recipe={selectedRecipe}
+        onSave={() => {
+          toast({
+            title: 'Recipe Saved!',
+            description: 'You can find it in your saved recipes.',
+          });
+        }}
       />
     </>
   );

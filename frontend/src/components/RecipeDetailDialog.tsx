@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, Users, ChefHat, Check, X, Lightbulb, Loader2, Flame } from 'lucide-react';
+import { Clock, Users, ChefHat, Check, X, Lightbulb, Loader2, Flame, Heart, BookmarkPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 
@@ -45,27 +45,45 @@ interface RecipeDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipe: Recipe | null;
+  onSave?: () => void;
 }
 
-const RecipeDetailDialog = ({ open, onOpenChange, recipe }: RecipeDetailDialogProps) => {
+const RecipeDetailDialog = ({ open, onOpenChange, recipe, onSave }: RecipeDetailDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [markingUsed, setMarkingUsed] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Mark items as used mutation
   const markItemsUsedMutation = useMutation({
     mutationFn: async (items: RecipeIngredient[]) => {
-      // For each available ingredient, mark a portion as used
+      // Get current inventory
+      const inventoryResponse = await api.get('/api/inventory/list', {
+        params: { status_filter: 'active' }
+      });
+      const inventory = inventoryResponse.data;
+
+      // For each available ingredient, find matching inventory item and mark as used
       const promises = items
         .filter(i => i.available)
         .map(async (ingredient) => {
-          // This would need the actual inventory item ID
-          // For now, we'll just invalidate the query
-          // In a real implementation, you'd need to find the inventory item by name
-          // and call the mark-used endpoint
-          return Promise.resolve();
+          // Find inventory item by name (case-insensitive)
+          const inventoryItem = inventory.find(
+            (item: any) => item.item_name.toLowerCase() === ingredient.item.toLowerCase()
+          );
+
+          if (inventoryItem) {
+            try {
+              // Mark the quantity from recipe as used
+              await api.post(`/api/inventory/${inventoryItem.id}/mark-used`, {
+                quantity_used: ingredient.quantity
+              });
+            } catch (error) {
+              console.error(`Failed to mark ${ingredient.item} as used:`, error);
+            }
+          }
         });
-      
+
       await Promise.all(promises);
     },
     onSuccess: () => {
@@ -89,9 +107,33 @@ const RecipeDetailDialog = ({ open, onOpenChange, recipe }: RecipeDetailDialogPr
 
   const handleMarkAsUsed = () => {
     if (!recipe) return;
-    if (confirm(`Mark the available ingredients as used in your inventory?`)) {
+    const availableCount = recipe.ingredients.filter(i => i.available).length;
+    if (confirm(`Mark ${availableCount} available ingredients as used in your inventory?`)) {
       setMarkingUsed(true);
       markItemsUsedMutation.mutate(recipe.ingredients);
+    }
+  };
+
+  const handleSaveRecipe = async () => {
+    if (!recipe) return;
+    setSaving(true);
+    try {
+      await api.post('/api/recipes/save', {
+        recipe_data: recipe
+      });
+      toast({
+        title: 'Recipe Saved!',
+        description: `"${recipe.recipe_name}" has been added to your collection.`,
+      });
+      if (onSave) onSave();
+    } catch (error: any) {
+      toast({
+        title: 'Failed to Save',
+        description: error.message || 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -270,9 +312,24 @@ const RecipeDetailDialog = ({ open, onOpenChange, recipe }: RecipeDetailDialogPr
         </ScrollArea>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
-            Close
-          </Button>
+          <div className="flex gap-2 flex-1">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-initial">
+              Close
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={handleSaveRecipe} 
+              disabled={saving}
+              className="flex-1 sm:flex-initial"
+            >
+              {saving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <BookmarkPlus className="mr-2 h-4 w-4" />
+              )}
+              Save Recipe
+            </Button>
+          </div>
           {availableIngredients.length > 0 && (
             <Button 
               onClick={handleMarkAsUsed} 

@@ -10,6 +10,13 @@ from schemas.inventory import (
     InventoryMarkUsed,
     BulkInventoryCreate
 )
+from schemas.recipe import (
+    RecipeIngredient,
+    RecipeNutrition,
+    RecipeData,
+    RecipeSave,
+    RecipeHistoryResponse
+)
 
 __all__ = [
     "UserCreate",
@@ -20,5 +27,10 @@ __all__ = [
     "InventoryUpdate",
     "InventoryMarkUsed",
     "BulkInventoryCreate",
+    "RecipeIngredient",
+    "RecipeNutrition",
+    "RecipeData",
+    "RecipeSave",
+    "RecipeHistoryResponse",
 ]
 

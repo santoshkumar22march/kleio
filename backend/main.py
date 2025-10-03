@@ -18,7 +18,7 @@ import sys
 from config import settings
 from database import init_db, check_db_connection
 from utils.auth import init_firebase
-from routers import health, users, inventory, ai
+from routers import health, users, inventory, ai, recipes
 
 # Configure logging
 logging.basicConfig(
@@ -107,6 +107,7 @@ app.include_router(health.router)
 app.include_router(users.router)
 app.include_router(inventory.router)
 app.include_router(ai.router)
+app.include_router(recipes.router)
 
 
 # Global exception handler

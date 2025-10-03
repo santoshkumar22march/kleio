@@ -1,6 +1,6 @@
 # API routers package
 
-from routers import users, inventory, health
+from routers import health, users, inventory, ai, recipes
 
-__all__ = ["users", "inventory", "health"]
+__all__ = ["health", "users", "inventory", "ai", "recipes"]
 

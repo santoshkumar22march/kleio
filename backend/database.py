@@ -55,7 +55,7 @@ def init_db():
 
     try:
         # Import all models here to ensure they're registered
-        from models import user, inventory, consumption_log
+        from models import user, inventory, consumption_log, recipe_history
         
         # Create all tables
         Base.metadata.create_all(bind=engine)

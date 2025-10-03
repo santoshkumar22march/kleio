@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import ReceiptScanner from '@/components/ReceiptScanner';
 import InventoryListEnhanced from '@/components/InventoryListEnhanced';
 import RecipeGenerator from '@/components/RecipeGenerator';
+import SavedRecipes from '@/components/SavedRecipes';
 import api from '@/lib/api';
 
 interface InventoryItem {
@@ -195,18 +196,22 @@ const DashboardEnhanced = () => {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
             <TabsTrigger value="inventory" className="text-xs sm:text-sm">
               <Package className="w-4 h-4 mr-1 sm:mr-2" />
               <span>Inventory</span>
             </TabsTrigger>
             <TabsTrigger value="scan-receipt" className="text-xs sm:text-sm">
               <Receipt className="w-4 h-4 mr-1 sm:mr-2" />
-              <span>Scan Receipt</span>
+              <span>Scan</span>
             </TabsTrigger>
             <TabsTrigger value="recipes" className="text-xs sm:text-sm">
               <ChefHat className="w-4 h-4 mr-1 sm:mr-2" />
-              <span>Recipes</span>
+              <span>Generate</span>
+            </TabsTrigger>
+            <TabsTrigger value="saved" className="text-xs sm:text-sm">
+              <ChefHat className="w-4 h-4 mr-1 sm:mr-2" />
+              <span>Saved</span>
             </TabsTrigger>
           </TabsList>
 
@@ -233,10 +238,19 @@ const DashboardEnhanced = () => {
           {/* Recipes Tab */}
           <TabsContent value="recipes" className="space-y-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold">Recipe Suggestions</h2>
+              <h2 className="text-xl sm:text-2xl font-bold">Generate Recipe</h2>
               <p className="text-sm text-muted-foreground">AI-powered recipes based on your inventory</p>
             </div>
             <RecipeGenerator />
+          </TabsContent>
+
+          {/* Saved Recipes Tab */}
+          <TabsContent value="saved" className="space-y-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold">Saved Recipes</h2>
+              <p className="text-sm text-muted-foreground">Your personal recipe collection</p>
+            </div>
+            <SavedRecipes />
           </TabsContent>
         </Tabs>
       </main>
