@@ -103,7 +103,7 @@ async def parse_receipt(
     "/confirm-receipt-items",
     status_code=status.HTTP_201_CREATED,
     summary="Confirm and add detected items",
-    description="Confirm detected items from receipt and add them to inventory"
+    description="Confirm detected items from receipt and add them to inventory. Updates existing items if already present."
 )
 async def confirm_receipt_items(
     items_data: BulkInventoryCreate,
@@ -113,26 +113,31 @@ async def confirm_receipt_items(
     """
     Confirm detected items and add to inventory
     
+    - If item already exists (active status, same name): Updates quantity (adds to existing)
+    - If item doesn't exist: Creates new entry
+    - Case-insensitive matching (Tomatoes = tomatoes)
+    
     User can review, edit quantities, and confirm items
     before they are added to inventory
     """
     
     logger.info(f"Adding {len(items_data.items)} confirmed items to inventory for user {firebase_uid}")
     
-    created_items = []
+    created_or_updated = []
     
     for item_data in items_data.items:
         try:
+            # create_inventory_item now handles upsert logic
             item = create_inventory_item(db, firebase_uid, item_data)
-            created_items.append(item)
+            created_or_updated.append(item)
         except Exception as e:
             logger.error(f"Failed to add item {item_data.item_name}: {e}")
             # Continue with other items even if one fails
     
     return {
         "success": True,
-        "items_added": len(created_items),
-        "message": f"Successfully added {len(created_items)} items to your inventory"
+        "items_processed": len(created_or_updated),
+        "message": f"Successfully processed {len(created_or_updated)} items (new items created or existing quantities updated)"
     }
 
 

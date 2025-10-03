@@ -33,7 +33,7 @@ router = APIRouter(prefix="/api/inventory", tags=["Inventory"])
     response_model=InventoryResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Add inventory item",
-    description="Add a new item to household inventory manually"
+    description="Add item to inventory. Updates quantity if item already exists (active status, same name)."
 )
 async def add_item(
     item_data: InventoryCreate,
@@ -41,11 +41,16 @@ async def add_item(
     db: Session = Depends(get_db)
 ):
     """
-    Add a new inventory item
+    Add a new inventory item OR update existing one
     
+    - If item with same name already exists (active): Adds to existing quantity
+    - If item doesn't exist: Creates new entry
+    - Case-insensitive matching
+    
+    **Fields:**
     - **item_name**: Name of the item (e.g., "Tomatoes")
     - **category**: Category (vegetables, fruits, dairy, staples, etc.)
-    - **quantity**: Quantity amount
+    - **quantity**: Quantity to add
     - **unit**: Unit of measurement (kg, liters, pieces, etc.)
     - **expiry_date**: Optional expiry date
     """
@@ -58,22 +63,27 @@ async def add_item(
     response_model=List[InventoryResponse],
     status_code=status.HTTP_201_CREATED,
     summary="Add multiple items",
-    description="Add multiple inventory items at once (used for photo-based addition)"
+    description="Add multiple items at once. Updates quantities for existing items."
 )
 async def bulk_add_items(
     bulk_data: BulkInventoryCreate,
     firebase_uid: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Add multiple inventory items at once
-
-    created_items = []
+    """
+    Add multiple inventory items at once
+    
+    For each item:
+    - If exists (active, same name): Updates quantity
+    - If doesn't exist: Creates new entry
+    """
+    processed_items = []
     
     for item_data in bulk_data.items:
         item = create_inventory_item(db, firebase_uid, item_data)
-        created_items.append(item)
+        processed_items.append(item)
     
-    return created_items
+    return processed_items
 
 
 @router.get(

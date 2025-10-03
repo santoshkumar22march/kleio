@@ -20,7 +20,10 @@ def create_inventory_item(
     item_data: InventoryCreate
 ) -> Inventory:
     """
-    Create a new inventory item
+    Create a new inventory item OR update existing one
+    
+    If an active item with the same name already exists, updates the quantity.
+    Otherwise, creates a new item.
     
     Args:
         db: Database session
@@ -28,18 +31,42 @@ def create_inventory_item(
         item_data: Inventory item data
         
     Returns:
-        Inventory: Created inventory item
+        Inventory: Created or updated inventory item
     """
-    new_item = Inventory(
-        firebase_uid=firebase_uid,
-        **item_data.model_dump()
-    )
+    # Check if item already exists (active status, same name)
+    existing_item = db.query(Inventory).filter(
+        and_(
+            Inventory.firebase_uid == firebase_uid,
+            Inventory.item_name.ilike(item_data.item_name),  # Case-insensitive match
+            Inventory.status == ItemStatus.ACTIVE
+        )
+    ).first()
     
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-    logger.info(f"Created inventory item: {new_item.item_name} for user {firebase_uid}")
-    return new_item
+    if existing_item:
+        # Update existing item - add quantities
+        existing_item.quantity += item_data.quantity
+        
+        # Update expiry date if new one is provided and is sooner
+        if item_data.expiry_date:
+            if not existing_item.expiry_date or item_data.expiry_date < existing_item.expiry_date:
+                existing_item.expiry_date = item_data.expiry_date
+        
+        db.commit()
+        db.refresh(existing_item)
+        logger.info(f"Updated inventory item: {existing_item.item_name} (new qty: {existing_item.quantity}{existing_item.unit}) for user {firebase_uid}")
+        return existing_item
+    else:
+        # Create new item
+        new_item = Inventory(
+            firebase_uid=firebase_uid,
+            **item_data.model_dump()
+        )
+        
+        db.add(new_item)
+        db.commit()
+        db.refresh(new_item)
+        logger.info(f"Created inventory item: {new_item.item_name} for user {firebase_uid}")
+        return new_item
 
 
 def get_user_inventory(
