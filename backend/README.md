@@ -256,9 +256,12 @@ source .venv/bin/activate  # Mac/Linux
 ## 🔧 Next Steps
 
 - [ ] Add AI endpoints (photo detection, recipe generation)
-- [ ] Implement shopping list generation
+- [x] Implement shopping list generation
+- [x] Add consumption pattern tracking
+- [x] Set up background jobs for pattern analysis
 - [ ] Add festival calendar features
-- [ ] Set up background jobs for pattern analysis
+- [ ] Implement WhatsApp bot integration
+- [ ] Add push notifications
 - [ ] Add comprehensive tests
 - [ ] Set up CI/CD pipeline
 

@@ -18,7 +18,8 @@ import sys
 from config import settings
 from database import init_db, check_db_connection
 from utils.auth import init_firebase
-from routers import health, users, inventory, ai, recipes
+from routers import health, users, inventory, ai, recipes, shopping
+from utils.scheduler import start_scheduler, stop_scheduler
 
 # Configure logging
 logging.basicConfig(
@@ -65,12 +66,27 @@ async def lifespan(app: FastAPI):
         if settings.is_production:
             raise
     
+    # Start background job scheduler for pattern analysis
+    try:
+        start_scheduler()
+        logger.info("✅ Background job scheduler started")
+    except Exception as e:
+        logger.error(f"⚠️ Failed to start scheduler: {e}")
+        # Don't fail startup if scheduler fails
+    
     logger.info("✅ Application startup complete")
     
     yield
     
     # Shutdown
     logger.info("👋 Shutting down application")
+    
+    # Stop background scheduler
+    try:
+        stop_scheduler()
+        logger.info("✅ Background scheduler stopped")
+    except Exception as e:
+        logger.error(f"⚠️ Error stopping scheduler: {e}")
 
 
 # Create FastAPI application
@@ -108,6 +124,7 @@ app.include_router(users.router)
 app.include_router(inventory.router)
 app.include_router(ai.router)
 app.include_router(recipes.router)
+app.include_router(shopping.router)
 
 
 # Global exception handler

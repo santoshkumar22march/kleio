@@ -10,6 +10,7 @@ import logging
 from models.inventory import Inventory, ItemStatus
 from models.consumption_log import ConsumptionLog
 from schemas.inventory import InventoryCreate, InventoryUpdate, InventoryMarkUsed
+from crud.purchase_log import create_purchase_log
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,18 @@ def create_inventory_item(
         
         db.commit()
         db.refresh(existing_item)
+        
+        # Log this purchase for pattern analysis
+        create_purchase_log(
+            db=db,
+            firebase_uid=firebase_uid,
+            item_name=existing_item.item_name,
+            category=existing_item.category,
+            quantity=float(item_data.quantity),
+            unit=existing_item.unit,
+            inventory_id=existing_item.id
+        )
+        
         logger.info(f"Updated inventory item: {existing_item.item_name} (new qty: {existing_item.quantity}{existing_item.unit}) for user {firebase_uid}")
         return existing_item
     else:
@@ -65,6 +78,18 @@ def create_inventory_item(
         db.add(new_item)
         db.commit()
         db.refresh(new_item)
+        
+        # Log this purchase for pattern analysis
+        create_purchase_log(
+            db=db,
+            firebase_uid=firebase_uid,
+            item_name=new_item.item_name,
+            category=new_item.category,
+            quantity=float(new_item.quantity),
+            unit=new_item.unit,
+            inventory_id=new_item.id
+        )
+        
         logger.info(f"Created inventory item: {new_item.item_name} for user {firebase_uid}")
         return new_item
 
