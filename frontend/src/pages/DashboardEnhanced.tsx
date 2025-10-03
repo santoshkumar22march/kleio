@@ -16,6 +16,8 @@ import ReceiptScanner from '@/components/ReceiptScanner';
 import InventoryListEnhanced from '@/components/InventoryListEnhanced';
 import RecipeGenerator from '@/components/RecipeGenerator';
 import SavedRecipes from '@/components/SavedRecipes';
+import SmartShoppingList from '@/components/SmartShoppingList';
+import PatternInsights from '@/components/PatternInsights';
 import api from '@/lib/api';
 
 interface InventoryItem {
@@ -207,11 +209,11 @@ const DashboardEnhanced = () => {
             </TabsTrigger>
             <TabsTrigger value="recipes" className="text-xs sm:text-sm">
               <ChefHat className="w-4 h-4 mr-1 sm:mr-2" />
-              <span>Generate</span>
+              <span>Recipes</span>
             </TabsTrigger>
-            <TabsTrigger value="saved" className="text-xs sm:text-sm">
-              <ChefHat className="w-4 h-4 mr-1 sm:mr-2" />
-              <span>Saved</span>
+            <TabsTrigger value="shopping" className="text-xs sm:text-sm">
+              <ShoppingCart className="w-4 h-4 mr-1 sm:mr-2" />
+              <span>Shopping</span>
             </TabsTrigger>
           </TabsList>
 
@@ -235,22 +237,74 @@ const DashboardEnhanced = () => {
             <ReceiptScanner onSuccess={() => setActiveTab('inventory')} />
           </TabsContent>
 
-          {/* Recipes Tab */}
+          {/* Recipes Tab with Sub-tabs */}
           <TabsContent value="recipes" className="space-y-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold">Generate Recipe</h2>
-              <p className="text-sm text-muted-foreground">AI-powered recipes based on your inventory</p>
-            </div>
-            <RecipeGenerator />
+            <Tabs defaultValue="generate" className="space-y-4">
+              <div className="border-b">
+                <TabsList className="bg-transparent border-0">
+                  <TabsTrigger 
+                    value="generate" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    Generate Recipe
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="saved"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    Saved Recipes
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="generate" className="space-y-4">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold">Generate Recipe</h2>
+                  <p className="text-sm text-muted-foreground">AI-powered recipes based on your inventory</p>
+                </div>
+                <RecipeGenerator />
+              </TabsContent>
+
+              <TabsContent value="saved" className="space-y-4">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold">Saved Recipes</h2>
+                  <p className="text-sm text-muted-foreground">Your personal recipe collection</p>
+                </div>
+                <SavedRecipes />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
-          {/* Saved Recipes Tab */}
-          <TabsContent value="saved" className="space-y-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold">Saved Recipes</h2>
-              <p className="text-sm text-muted-foreground">Your personal recipe collection</p>
-            </div>
-            <SavedRecipes />
+          {/* Shopping Tab */}
+          <TabsContent value="shopping" className="space-y-4">
+            <Tabs defaultValue="list" className="space-y-4">
+              <div className="border-b">
+                <TabsList className="bg-transparent border-0">
+                  <TabsTrigger 
+                    value="list" 
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Shopping List
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="insights"
+                    className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Pattern Insights
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="list">
+                <SmartShoppingList />
+              </TabsContent>
+
+              <TabsContent value="insights">
+                <PatternInsights />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
