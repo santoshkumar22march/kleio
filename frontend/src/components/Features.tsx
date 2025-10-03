@@ -21,12 +21,6 @@ const features = [
     color: "text-accent",
   },
   {
-    icon: TrendingDown,
-    title: "Mandi Price Tracking",
-    description: "Real-time alerts when vegetables are 40% cheaper at wholesale markets.",
-    color: "text-primary",
-  },
-  {
     icon: Brain,
     title: "AI Meal Planning",
     description: "Generate recipes from what's in your kitchen. Zero waste, maximum taste.",
@@ -45,22 +39,10 @@ const features = [
     color: "text-primary",
   },
   {
-    icon: Heart,
-    title: "Community Sharing",
-    description: "Share surplus with neighbors. Organize bulk buying in your building.",
-    color: "text-secondary",
-  },
-  {
     icon: Leaf,
     title: "Sustainability First",
     description: "Track plastic footprint. Promote local, seasonal, organic choices.",
     color: "text-accent",
-  },
-  {
-    icon: Shield,
-    title: "Emergency Ready",
-    description: "Monsoon supplies, power cut essentials, medical emergency kits - always stocked.",
-    color: "text-primary",
   },
 ];
 
