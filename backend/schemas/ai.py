@@ -7,7 +7,7 @@ from typing import List, Optional, Dict
 
 class DetectedItem(BaseModel):
     # Item detected from receipt image
-    name: str = Field(..., description="Item name")
+    item_name: str = Field(..., description="Item name")
     quantity: float = Field(..., gt=0, description="Quantity")
     unit: str = Field(..., description="Unit (kg, liters, pieces, etc.)")
     confidence: float = Field(..., ge=0, le=1, description="Detection confidence (0-1)")
@@ -16,7 +16,7 @@ class DetectedItem(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "name": "tomatoes",
+                "item_name": "tomatoes",
                 "quantity": 2.0,
                 "unit": "kg",
                 "confidence": 0.95,
@@ -39,7 +39,7 @@ class ReceiptParseResponse(BaseModel):
                 "items_detected": 3,
                 "items": [
                     {
-                        "name": "tomatoes",
+                        "item_name": "tomatoes",
                         "quantity": 2.0,
                         "unit": "kg",
                         "confidence": 0.95,

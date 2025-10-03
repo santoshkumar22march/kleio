@@ -68,14 +68,14 @@ IMPORTANT RULES:
 Return ONLY valid JSON array (no markdown, no explanation):
 [
   {
-    "name": "tomatoes",
+    "item_name": "tomatoes",
     "quantity": 2.0,
     "unit": "kg",
     "confidence": 0.95,
     "category": "vegetables"
   },
   {
-    "name": "toor dal",
+    "item_name": "toor dal",
     "quantity": 1.0,
     "unit": "kg",
     "confidence": 0.90,
@@ -130,7 +130,11 @@ If you cannot read the receipt clearly, return an empty array: []
             # Validate and clean items
             validated_items = []
             for item in items:
-                if all(key in item for key in ["name", "quantity", "unit"]):
+                # Support both 'name' and 'item_name' for backward compatibility
+                if "name" in item and "item_name" not in item:
+                    item["item_name"] = item.pop("name")
+                
+                if all(key in item for key in ["item_name", "quantity", "unit"]):
                     # Set default category if missing
                     if "category" not in item:
                         item["category"] = "others"

@@ -78,6 +78,10 @@ class InventoryResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        json_encoders = {
+            date: lambda v: v.isoformat() if v else None,
+            datetime: lambda v: v.isoformat() if v else None,
+        }
         json_schema_extra = {
             "example": {
                 "id": 1,
