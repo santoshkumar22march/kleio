@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import ReceiptScanner from '@/components/ReceiptScanner';
 import InventoryListEnhanced from '@/components/InventoryListEnhanced';
+import RecipeGenerator from '@/components/RecipeGenerator';
 import api from '@/lib/api';
 
 interface InventoryItem {
@@ -235,23 +236,7 @@ const DashboardEnhanced = () => {
               <h2 className="text-xl sm:text-2xl font-bold">Recipe Suggestions</h2>
               <p className="text-sm text-muted-foreground">AI-powered recipes based on your inventory</p>
             </div>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-12">
-                  <ChefHat className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Coming Soon!</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Recipe suggestions will appear here once you add items to your inventory.
-                  </p>
-                  {stats.total === 0 && (
-                    <Button onClick={() => setActiveTab('scan-receipt')}>
-                      <Receipt className="w-4 h-4 mr-2" />
-                      Scan Your First Receipt
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <RecipeGenerator />
           </TabsContent>
         </Tabs>
       </main>
