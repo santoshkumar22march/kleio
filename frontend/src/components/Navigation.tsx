@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const Navigation = () => {
+  const navigate = useNavigate();
+  
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
       <div className="container mx-auto px-4">
@@ -30,7 +33,7 @@ export const Navigation = () => {
           </div>
 
           {/* CTA Button */}
-          <Button variant="hero" size="sm" className="shadow-soft">
+          <Button variant="hero" size="sm" className="shadow-soft" onClick={() => navigate('/signup')}>
             Get Early Access
           </Button>
         </div>

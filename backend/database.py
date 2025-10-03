@@ -3,7 +3,7 @@ Database configuration and session management
 Uses SQLAlchemy ORM with PostgreSQL (Neon)
 """
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine,text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
@@ -69,7 +69,7 @@ def check_db_connection():
     # Check if database connection is working
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         logger.info("✅ Database connection successful")
         return True
     except Exception as e:
