@@ -42,6 +42,9 @@ app.log
 .coverage
 htmlcov/
 .tox/
+test_receipt.jpg
+test_*.jpg
+test_*.png
 
 # OS
 .DS_Store
