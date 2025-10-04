@@ -35,3 +35,9 @@ pytest-cov==6.0.0
 # Background Tasks (for future use)
 apscheduler==3.10.4
 
+# LangChain for conversational AI
+langchain==0.3.13
+langchain-google-genai==2.0.8
+langgraph==0.2.59
+langgraph-checkpoint==2.0.10
+

@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limit_per_minute: int = 60
     
+    # Telegram Bot (Optional - for future Telegram integration)
+    telegram_bot_token: str = ""
+    telegram_webhook_secret: str = ""
+    
     # Optional APIs
     openai_api_key: str = ""
     
