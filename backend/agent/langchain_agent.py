@@ -45,12 +45,24 @@ def create_agent(firebase_uid: str, db_session: Session):
         convert_system_message_to_human=True
     )
     
-    # Create wrapper functions that bind firebase_uid and db_session
+    # ============================================================================
+    # PURE WRAPPER FUNCTIONS - Just call existing backend functions
+    # The LLM will format natural language responses based on the returned data
+    # ============================================================================
+    
     def add_items_wrapper(items_text: str) -> str:
-        """Add items to inventory from natural language."""
-        logger.info(f"🔧 TOOL CALLED: add_items_wrapper with input: {items_text}")
+        """
+        Add items to user's inventory from natural language input.
+        
+        Args:
+            items_text: Natural language text like "bought 2kg tomatoes and 1 liter milk"
+            
+        Returns:
+            JSON string with added items details for the LLM to format
+        """
+        logger.info(f"🔧 TOOL: add_items_wrapper | Input: {items_text}")
         try:
-            # Use Gemini to parse the natural language into structured items
+            # Step 1: Parse natural language using Gemini
             gemini = get_gemini_client()
             
             prompt = f"""
@@ -59,18 +71,8 @@ Parse this natural language text into structured grocery items:
 
 Return ONLY valid JSON array (no markdown):
 [
-  {{
-    "item_name": "tomatoes",
-    "quantity": 2.0,
-    "unit": "kg",
-    "category": "vegetables"
-  }},
-  {{
-    "item_name": "milk",
-    "quantity": 1.0,
-    "unit": "liter",
-    "category": "dairy"
-  }}
+  {{"item_name": "tomatoes", "quantity": 2.0, "unit": "kg", "category": "vegetables"}},
+  {{"item_name": "milk", "quantity": 1.0, "unit": "liter", "category": "dairy"}}
 ]
 
 Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverages, meat, seafood, bakery, frozen, oils, condiments, others
@@ -79,77 +81,85 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
             response = gemini.client.models.generate_content(
                 model=gemini.MODEL_ID,
                 contents=prompt,
-                config={
-                    "temperature": 0.3,
-                    "response_mime_type": "application/json"
-                }
+                config={"temperature": 0.3, "response_mime_type": "application/json"}
             )
             
             items_data = json.loads(response.text)
             
             if not isinstance(items_data, list) or not items_data:
-                return "❌ Could not understand the items. Please be more specific (e.g., '2kg tomatoes, 1 liter milk')"
+                return json.dumps({"error": "Could not parse items", "items": []})
             
-            # Add items to inventory
+            # Step 2: Add items using existing CRUD function
             added_items = []
             for item_dict in items_data:
                 item = InventoryCreate(**item_dict)
                 created_item = create_inventory_item(db_session, firebase_uid, item)
-                added_items.append(f"{created_item.item_name} ({created_item.quantity}{created_item.unit})")
-                logger.info(f"✅ Database updated: {created_item.item_name} added to inventory")
+                added_items.append({
+                    "name": created_item.item_name,
+                    "quantity": float(created_item.quantity),
+                    "unit": created_item.unit,
+                    "category": created_item.category
+                })
+                logger.info(f"✅ DB: Added {created_item.item_name}")
             
-            result = f"✅ Added {len(added_items)} items to inventory: {', '.join(added_items)}"
-            logger.info(f"🔧 TOOL RESULT: {result}")
-            return result
+            # Return structured data for LLM to format
+            result = {"success": True, "items_added": added_items, "count": len(added_items)}
+            logger.info(f"🔧 RESULT: {len(added_items)} items added")
+            return json.dumps(result)
             
         except Exception as e:
-            logger.error(f"Error adding inventory items: {e}")
-            return f"❌ Failed to add items: {str(e)}"
+            logger.error(f"❌ Error: {e}")
+            return json.dumps({"error": str(e), "success": False})
     
     def get_shopping_wrapper(urgency: Optional[str] = None) -> str:
-        """Get smart shopping list."""
-        logger.info(f"🔧 TOOL CALLED: get_shopping_wrapper with urgency: {urgency}")
+        """
+        Get smart shopping list based on usage patterns.
+        
+        Args:
+            urgency: Filter by urgency level ('urgent', 'this_week', or None for all)
+            
+        Returns:
+            JSON string with shopping list data for the LLM to format
+        """
+        logger.info(f"🔧 TOOL: get_shopping_wrapper | Urgency: {urgency}")
         try:
+            # Call existing pattern analyzer function
             shopping_list = generate_shopping_list(
                 db=db_session,
                 firebase_uid=firebase_uid,
                 urgency_filter=urgency
             )
             
-            result = []
+            # Return raw data for LLM to format naturally
+            result = {
+                "success": True,
+                "urgent": shopping_list["urgent"],
+                "this_week": shopping_list["this_week"],
+                "later": shopping_list["later"],
+                "total_items": len(shopping_list["urgent"]) + len(shopping_list["this_week"]) + len(shopping_list["later"])
+            }
             
-            # Format urgent items
-            if shopping_list["urgent"]:
-                result.append("🔴 URGENT (Buy today/tomorrow):")
-                for item in shopping_list["urgent"]:
-                    result.append(f"  • {item['item_name']} - {item['suggested_quantity']:.1f}{item['unit']} ({item['reason']})")
-            
-            # Format this week items
-            if shopping_list["this_week"]:
-                result.append("\n🟡 THIS WEEK:")
-                for item in shopping_list["this_week"]:
-                    result.append(f"  • {item['item_name']} - {item['suggested_quantity']:.1f}{item['unit']} ({item['reason']})")
-            
-            # Format later items
-            if shopping_list["later"]:
-                result.append("\n🟢 LATER:")
-                for item in shopping_list["later"]:
-                    result.append(f"  • {item['item_name']} - {item['suggested_quantity']:.1f}{item['unit']} ({item['reason']})")
-            
-            if not result:
-                return "✅ Your inventory looks good! No urgent shopping needed right now."
-            
-            return "\n".join(result)
+            logger.info(f"🔧 RESULT: {result['total_items']} items in shopping list")
+            return json.dumps(result)
             
         except Exception as e:
-            logger.error(f"Error generating shopping list: {e}")
-            return f"❌ Failed to generate shopping list: {str(e)}"
+            logger.error(f"❌ Error: {e}")
+            return json.dumps({"error": str(e), "success": False})
     
-    def generate_recipe_wrapper(preferences: str = "") -> str:
-        """Generate recipe from inventory."""
-        logger.info(f"🔧 TOOL CALLED: generate_recipe_wrapper with preferences: {preferences}")
+    def check_recipe_feasibility(preferences: str = "") -> str:
+        """
+        Check if a recipe is feasible with current inventory items.
+        Generates a recipe and indicates what user has vs needs to buy.
+        
+        Args:
+            preferences: Recipe preferences like "quick dinner", "vegetarian lunch", etc.
+            
+        Returns:
+            JSON string with recipe feasibility data for the LLM to format
+        """
+        logger.info(f"🔧 TOOL: check_recipe_feasibility | Preferences: {preferences}")
         try:
-            # Get user's inventory
+            # Get user's inventory using existing CRUD
             inventory_items = get_user_inventory(
                 db_session,
                 firebase_uid,
@@ -158,58 +168,80 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
             )
             
             if not inventory_items:
-                return "❌ Your inventory is empty. Please add items first before generating recipes."
+                return json.dumps({
+                    "success": False,
+                    "error": "Empty inventory",
+                    "message": "No items in inventory to generate recipe"
+                })
             
-            # Build available items list
+            # Build available items list for recipe generation
             available_items = [f"{item.item_name} ({item.quantity}{item.unit})" for item in inventory_items]
             
-            # Parse preferences to extract filters
-            gemini = get_gemini_client()
-            
-            # Generate recipe using existing function
-            filters = {
-                "cooking_time": 45,
-                "meal_type": "any",
-                "cuisine": "Indian"
-            }
-            
-            # Extract preferences from natural language
-            preferences_lower = preferences.lower()
-            if "quick" in preferences_lower or "fast" in preferences_lower or "30" in preferences_lower:
+            # Parse preferences
+            filters = {"cooking_time": 45, "meal_type": "any", "cuisine": "Indian"}
+            prefs_lower = preferences.lower()
+            if "quick" in prefs_lower or "fast" in prefs_lower or "30" in prefs_lower:
                 filters["cooking_time"] = 30
-            if "lunch" in preferences_lower:
+            if "lunch" in prefs_lower:
                 filters["meal_type"] = "lunch"
-            elif "dinner" in preferences_lower:
+            elif "dinner" in prefs_lower:
                 filters["meal_type"] = "dinner"
-            elif "breakfast" in preferences_lower:
+            elif "breakfast" in prefs_lower:
                 filters["meal_type"] = "breakfast"
             
-            # For now, return a helpful message with available items
-            # Note: Full recipe generation requires async context
-            result = [
-                f"🍳 **Recipe Suggestions Based on Your Inventory**",
-                f"\nYou have {len(available_items)} items available:",
-            ]
+            # Call existing generate_recipe function
+            gemini = get_gemini_client()
             
-            for item in available_items[:10]:  # Show first 10 items
-                result.append(f"  • {item}")
+            # Create async context for recipe generation
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
             
-            if len(available_items) > 10:
-                result.append(f"  ... and {len(available_items) - 10} more items")
+            recipe = loop.run_until_complete(gemini.generate_recipe(
+                available_items=available_items,
+                dietary_preferences={
+                    "vegetarian": "vegetarian" in prefs_lower or "veg" in prefs_lower,
+                    "vegan": "vegan" in prefs_lower,
+                },
+                filters=filters
+            ))
             
-            result.append(f"\n💡 **Suggestion:** Use the web interface at /api/ai/generate-recipe for full recipe generation with detailed instructions.")
-            result.append(f"\nPreferences: {preferences}")
+            # Return recipe data for LLM to create natural response
+            result = {
+                "success": True,
+                "recipe_name": recipe.get("recipe_name"),
+                "description": recipe.get("description"),
+                "cooking_time": recipe.get("cooking_time_minutes"),
+                "servings": recipe.get("servings"),
+                "difficulty": recipe.get("difficulty"),
+                "ingredients": recipe.get("ingredients", []),
+                "available_count": sum(1 for ing in recipe.get("ingredients", []) if ing.get("available")),
+                "missing_count": sum(1 for ing in recipe.get("ingredients", []) if not ing.get("available")),
+                "feasible": sum(1 for ing in recipe.get("ingredients", []) if ing.get("available")) >= len(recipe.get("ingredients", [])) * 0.7  # 70% available
+            }
             
-            return "\n".join(result)
+            logger.info(f"🔧 RESULT: Recipe '{result['recipe_name']}' - {result['available_count']}/{len(recipe.get('ingredients', []))} items available")
+            return json.dumps(result)
             
         except Exception as e:
-            logger.error(f"Error generating recipe: {e}")
-            return f"❌ Failed to generate recipe: {str(e)}"
+            logger.error(f"❌ Error: {e}")
+            return json.dumps({"error": str(e), "success": False})
     
     def query_inventory_wrapper(category: Optional[str] = None) -> str:
-        """Query current inventory."""
-        logger.info(f"🔧 TOOL CALLED: query_inventory_wrapper with category: {category}")
+        """
+        Query user's current inventory items.
+        
+        Args:
+            category: Optional category filter (e.g., 'vegetables', 'dairy')
+            
+        Returns:
+            JSON string with inventory data for the LLM to format
+        """
+        logger.info(f"🔧 TOOL: query_inventory_wrapper | Category: {category}")
         try:
+            # Call existing CRUD function
             inventory_items = get_user_inventory(
                 db_session,
                 firebase_uid,
@@ -219,94 +251,140 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
             )
             
             if not inventory_items:
-                if category:
-                    return f"❌ No {category} items found in your inventory."
-                return "❌ Your inventory is empty. Add items to get started!"
+                return json.dumps({
+                    "success": True,
+                    "items": [],
+                    "total": 0,
+                    "message": f"No {category} items found" if category else "Inventory is empty"
+                })
+            
+            # Convert to JSON-serializable format
+            items_data = []
+            for item in inventory_items:
+                expiry_info = None
+                if item.expiry_date:
+                    days_left = (item.expiry_date - date.today()).days
+                    expiry_info = {
+                        "date": item.expiry_date.isoformat(),
+                        "days_left": days_left,
+                        "status": "urgent" if days_left <= 3 else "soon" if days_left <= 7 else "ok"
+                    }
+                
+                items_data.append({
+                    "name": item.item_name,
+                    "quantity": float(item.quantity),
+                    "unit": item.unit,
+                    "category": item.category,
+                    "expiry": expiry_info,
+                    "added_date": item.added_date.isoformat()
+                })
             
             # Group by category
             by_category = {}
-            for item in inventory_items:
-                if item.category not in by_category:
-                    by_category[item.category] = []
-                by_category[item.category].append(item)
+            for item_data in items_data:
+                cat = item_data["category"]
+                if cat not in by_category:
+                    by_category[cat] = []
+                by_category[cat].append(item_data)
             
-            result = [f"📦 **Your Inventory** ({len(inventory_items)} items):"]
+            result = {
+                "success": True,
+                "items": items_data,
+                "by_category": by_category,
+                "total": len(items_data)
+            }
             
-            for cat, items in sorted(by_category.items()):
-                result.append(f"\n**{cat.title()}:**")
-                for item in items:
-                    expiry_text = ""
-                    if item.expiry_date:
-                        days_left = (item.expiry_date - date.today()).days
-                        if days_left <= 3:
-                            expiry_text = f" ⚠️ Expires in {days_left} days"
-                        elif days_left <= 7:
-                            expiry_text = f" ⏰ Expires in {days_left} days"
-                    
-                    result.append(f"  • {item.item_name}: {item.quantity}{item.unit}{expiry_text}")
-            
-            return "\n".join(result)
+            logger.info(f"🔧 RESULT: {len(items_data)} items in inventory")
+            return json.dumps(result)
             
         except Exception as e:
-            logger.error(f"Error querying inventory: {e}")
-            return f"❌ Failed to query inventory: {str(e)}"
+            logger.error(f"❌ Error: {e}")
+            return json.dumps({"error": str(e), "success": False})
     
-    # Wrap the functions as tools with proper signatures
+    # ============================================================================
+    # Register tools with LangChain
+    # ============================================================================
     from langchain.tools import StructuredTool
     
     tools = [
         StructuredTool.from_function(
             func=add_items_wrapper,
             name="add_inventory_items",
-            description="Add items to user's inventory from natural language. Example: 'bought 2kg tomatoes and 1 liter milk'"
-        ),
-        StructuredTool.from_function(
-            func=get_shopping_wrapper,
-            name="get_shopping_list",
-            description="Generate smart shopping list based on usage patterns. Can filter by urgency: 'urgent', 'this_week', or None for all"
-        ),
-        StructuredTool.from_function(
-            func=generate_recipe_wrapper,
-            name="generate_recipe",
-            description="Generate recipe from available inventory items. Include preferences like 'quick vegetarian dinner' or 'North Indian lunch'"
+            description="Add items to inventory from natural language (e.g., 'bought 2kg tomatoes and milk'). Returns JSON with added items that you MUST format into a natural response."
         ),
         StructuredTool.from_function(
             func=query_inventory_wrapper,
             name="query_inventory",
-            description="Query user's current inventory. Can filter by category like 'vegetables', 'dairy', or None for all items"
+            description="Query user's current inventory items. Optional category filter. Returns JSON with items data that you MUST format into a natural response."
+        ),
+        StructuredTool.from_function(
+            func=get_shopping_wrapper,
+            name="get_shopping_list",
+            description="Generate smart shopping list based on usage patterns. Returns JSON with urgent/this_week/later items that you MUST format into a natural response."
+        ),
+        StructuredTool.from_function(
+            func=check_recipe_feasibility,
+            name="check_recipe_feasibility",
+            description="Check if a recipe is feasible with current inventory. Generates full recipe with ingredients marked as available/missing. Returns JSON that you MUST format into a helpful natural response."
         ),
     ]
     
-    # System prompt - CRITICAL: Must be emphatic about tool usage
-    system_message = f"""You are Kleio, a household inventory management assistant for Indian families.
+    # ============================================================================
+    # System Prompt - Define agent behavior
+    # ============================================================================
+    system_message = f"""You are Kleio, a friendly household inventory assistant for Indian families.
 
-Current user: {firebase_uid}
+USER ID: {firebase_uid}
 
-CRITICAL RULES - YOU MUST FOLLOW THESE:
-1. ALWAYS use tools to perform actions - NEVER just talk about doing them
-2. When user wants to add items → MUST call add_inventory_items tool
-3. When user wants shopping list → MUST call get_shopping_list tool  
-4. When user wants recipe → MUST call generate_recipe tool
-5. When user wants inventory → MUST call query_inventory tool
+HOW YOU WORK:
+1. Tools return JSON data with structured information
+2. You MUST call the appropriate tool for every user request
+3. You MUST format the JSON data into natural, friendly responses
+4. You NEVER make up data - only use what tools return
 
-TOOL USAGE EXAMPLES (YOU MUST DO THIS):
-- User: "bought tomatoes and milk" → CALL add_inventory_items("bought tomatoes and milk")
-- User: "what should I buy?" → CALL get_shopping_list(urgency=None)
-- User: "suggest a recipe" → CALL generate_recipe(preferences="")
-- User: "what do I have?" → CALL query_inventory(category=None)
+AVAILABLE TOOLS & WHEN TO USE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📥 add_inventory_items(items_text)
+   When: User says they bought/added items
+   Returns: JSON with added items
+   You format as: "✅ Added [items] to your inventory!"
 
-DO NOT:
-❌ Say "I'll add items" without calling the tool
-❌ Say "I tried adding" without showing tool results  
-❌ Make up responses - only relay tool results
-❌ Apologize for errors that didn't happen
+📦 query_inventory(category)
+   When: User asks what they have
+   Returns: JSON with inventory items grouped by category
+   You format as: Natural list organized by category with quantities
 
-DO:
-✅ Call the tool immediately
-✅ Return the exact result from the tool
-✅ Be friendly but action-oriented
+🛒 get_shopping_list(urgency)
+   When: User asks what to buy
+   Returns: JSON with urgent/this_week/later items
+   You format as: Organized shopping list with urgency levels
 
-For Indian context: use kg/liters, INR currency, common Indian grocery items.
+🍳 check_recipe_feasibility(preferences)
+   When: User wants recipe suggestions
+   Returns: JSON with recipe details and ingredient availability
+   You format as: Recipe summary with what they have vs need to buy
+
+RESPONSE STYLE:
+✅ Friendly and conversational (but not overly chatty)
+✅ Use emojis appropriately: ✅ ❌ 🔴 🟡 🟢 📦 🛒 🍳
+✅ Indian context: kg, liters, INR, common Indian items
+✅ Clear and actionable information
+❌ Never say "I'll try" or "let me" - just call the tool and report results
+❌ Never apologize for non-existent errors
+❌ Never make up data
+
+EXAMPLES:
+User: "bought 2kg tomatoes and milk"
+You: Call add_inventory_items("bought 2kg tomatoes and milk") → Format JSON as natural response
+
+User: "what vegetables do I have?"
+You: Call query_inventory("vegetables") → Format JSON showing vegetables with quantities
+
+User: "what should I buy this week?"
+You: Call get_shopping_list("this_week") → Format JSON as organized shopping list
+
+User: "can I make dinner with what I have?"
+You: Call check_recipe_feasibility("dinner") → Format JSON showing recipe feasibility
 """
     
     # Create agent with memory
