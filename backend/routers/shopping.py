@@ -148,7 +148,29 @@ async def get_predictions(
         limit=limit
     )
     
-    return predictions
+    # Manually serialize to handle datetime fields properly
+    result = []
+    for pred in predictions:
+        pred_dict = {
+            "id": pred.id,
+            "item_name": pred.item_name,
+            "category": pred.category,
+            "unit": pred.unit,
+            "current_stock": float(pred.current_stock) if pred.current_stock is not None else 0.0,
+            "avg_days_between_purchases": float(pred.avg_days_between_purchases) if pred.avg_days_between_purchases else None,
+            "avg_quantity_per_purchase": float(pred.avg_quantity_per_purchase) if pred.avg_quantity_per_purchase else None,
+            "avg_consumption_rate": float(pred.avg_consumption_rate) if pred.avg_consumption_rate else None,
+            "predicted_depletion_date": pred.predicted_depletion_date.isoformat() if pred.predicted_depletion_date else None,
+            "days_until_depletion": float(pred.days_until_depletion) if pred.days_until_depletion is not None else None,
+            "suggested_quantity": float(pred.suggested_quantity) if pred.suggested_quantity else None,
+            "confidence_level": pred.confidence_level.value if hasattr(pred.confidence_level, 'value') else str(pred.confidence_level),
+            "urgency": pred.urgency.value if hasattr(pred.urgency, 'value') else str(pred.urgency),
+            "data_points_count": pred.data_points_count,
+            "last_analyzed": pred.last_analyzed.isoformat() if pred.last_analyzed else None
+        }
+        result.append(pred_dict)
+    
+    return result
 
 
 @router.post(

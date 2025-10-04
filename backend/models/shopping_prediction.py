@@ -40,6 +40,7 @@ class ShoppingPrediction(Base):
     
     # Predictions
     predicted_depletion_date = Column(Date, nullable=True)     # When item will run out
+    days_until_depletion = Column(Float, nullable=True)        # Days remaining until depletion
     suggested_quantity = Column(Float, nullable=True)          # Recommended purchase amount
     confidence_level = Column(SQLEnum(ConfidenceLevel), default=ConfidenceLevel.LOW)
     urgency = Column(SQLEnum(UrgencyLevel), default=UrgencyLevel.LATER)
@@ -74,6 +75,7 @@ class ShoppingPrediction(Base):
             "avg_quantity_per_purchase": self.avg_quantity_per_purchase,
             "avg_consumption_rate": self.avg_consumption_rate,
             "predicted_depletion_date": self.predicted_depletion_date.isoformat() if self.predicted_depletion_date else None,
+            "days_until_depletion": self.days_until_depletion,
             "suggested_quantity": self.suggested_quantity,
             "confidence_level": self.confidence_level.value,
             "urgency": self.urgency.value,

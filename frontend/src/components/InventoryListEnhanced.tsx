@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Package, Trash2, AlertCircle, Edit2, Search, Filter, SortAsc, Plus, X } from 'lucide-react';
+import { Package, Trash2, AlertCircle, Edit2, Search, Filter, SortAsc, Plus, X, TrendingUp, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
 import { format } from 'date-fns';
@@ -29,6 +29,15 @@ interface InventoryItem {
   status: string;
   added_date: string;
   expiry_date?: string;
+}
+
+interface PatternPrediction {
+  item_name: string;
+  category: string;
+  urgency: string;
+  confidence_level: string;
+  days_until_depletion: number | null;
+  avg_days_between_purchases: number | null;
 }
 
 const InventoryListEnhanced = () => {
@@ -55,6 +64,21 @@ const InventoryListEnhanced = () => {
       return response.data;
     },
   });
+
+  // Fetch pattern predictions
+  const { data: predictions } = useQuery<PatternPrediction[]>({
+    queryKey: ['all-predictions'],
+    queryFn: async () => {
+      const response = await api.get('/api/shopping/predictions');
+      return response.data;
+    },
+  });
+
+  // Create a map of item predictions for quick lookup
+  const predictionMap = useMemo(() => {
+    if (!predictions) return new Map();
+    return new Map(predictions.map(p => [p.item_name.toLowerCase(), p]));
+  }, [predictions]);
 
   // Delete single item
   const deleteItemMutation = useMutation({
@@ -191,6 +215,28 @@ const InventoryListEnhanced = () => {
       'beverages': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100',
     };
     return colors[category.toLowerCase()] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
+  };
+
+  const getUrgencyBadge = (urgency: string) => {
+    switch (urgency) {
+      case 'urgent':
+        return <Badge variant="destructive" className="text-xs">🚨 URGENT</Badge>;
+      case 'this_week':
+        return <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-xs">📅 THIS WEEK</Badge>;
+      case 'later':
+        return <Badge variant="secondary" className="text-xs">✅ GOOD</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const getConfidenceStars = (confidence: string) => {
+    switch (confidence) {
+      case 'high': return '⭐⭐⭐';
+      case 'medium': return '⭐⭐';
+      case 'low': return '⭐';
+      default: return '';
+    }
   };
 
   if (isLoading) {
@@ -370,56 +416,124 @@ const InventoryListEnhanced = () => {
                     <TableHead>Item Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead className="text-right">Quantity</TableHead>
+                    <TableHead className="hidden lg:table-cell">Pattern Status</TableHead>
                     <TableHead className="hidden sm:table-cell">Added</TableHead>
-                    <TableHead className="hidden md:table-cell">Expires</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredAndSortedItems.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedItems.includes(item.id)}
-                          onCheckedChange={() => toggleSelectItem(item.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{item.item_name}</TableCell>
-                      <TableCell>
-                        <Badge className={getCategoryColor(item.category)} variant="secondary">
-                          {item.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {item.quantity} {item.unit}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">
-                        {format(new Date(item.added_date), 'MMM d, yyyy')}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground hidden md:table-cell">
-                        {item.expiry_date ? format(new Date(item.expiry_date), 'MMM d, yyyy') : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(item.id, item.item_name)}
-                            disabled={deleteItemMutation.isPending}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredAndSortedItems.map((item) => {
+                    const pattern = predictionMap.get(item.item_name.toLowerCase());
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedItems.includes(item.id)}
+                            onCheckedChange={() => toggleSelectItem(item.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{item.item_name}</span>
+                              {pattern && getUrgencyBadge(pattern.urgency)}
+                            </div>
+                            {/* Mobile: Show pattern info */}
+                            {pattern && (
+                              <div className="lg:hidden text-xs text-muted-foreground flex items-center gap-2">
+                                {pattern.days_until_depletion !== null && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {Math.round(pattern.days_until_depletion)}d left
+                                  </span>
+                                )}
+                                {pattern.avg_days_between_purchases && (
+                                  <span className="flex items-center gap-1">
+                                    <TrendingUp className="w-3 h-3" />
+                                    ~{Math.round(pattern.avg_days_between_purchases)}d cycle
+                                  </span>
+                                )}
+                                <span>{getConfidenceStars(pattern.confidence_level)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getCategoryColor(item.category)} variant="secondary">
+                            {item.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="font-medium">{item.quantity} {item.unit}</span>
+                            {pattern && pattern.days_until_depletion !== null && (
+                              <div className="w-full max-w-[80px] mt-1">
+                                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                  <div 
+                                    className={`h-full transition-all ${
+                                      pattern.days_until_depletion <= 1 ? 'bg-red-500' :
+                                      pattern.days_until_depletion <= 7 ? 'bg-orange-500' :
+                                      'bg-green-500'
+                                    }`}
+                                    style={{ 
+                                      width: `${Math.min(100, Math.max(0, (pattern.days_until_depletion / (pattern.avg_days_between_purchases || 7)) * 100))}%`
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        {/* Desktop: Pattern Status Column */}
+                        <TableCell className="hidden lg:table-cell">
+                          {pattern ? (
+                            <div className="text-xs space-y-1">
+                              {pattern.days_until_depletion !== null && (
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <Clock className="w-3 h-3" />
+                                  Runs out in {Math.round(pattern.days_until_depletion)} day{Math.round(pattern.days_until_depletion) !== 1 ? 's' : ''}
+                                </div>
+                              )}
+                              {pattern.avg_days_between_purchases && (
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <TrendingUp className="w-3 h-3" />
+                                  Buy every ~{Math.round(pattern.avg_days_between_purchases)} days
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1">
+                                <span className="text-muted-foreground">{getConfidenceStars(pattern.confidence_level)}</span>
+                                <span className="capitalize text-muted-foreground">{pattern.confidence_level}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Building pattern...</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground hidden sm:table-cell">
+                          {format(new Date(item.added_date), 'MMM d, yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(item.id, item.item_name)}
+                              disabled={deleteItemMutation.isPending}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

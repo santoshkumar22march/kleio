@@ -73,6 +73,7 @@ class PredictionResponse(BaseModel):
     avg_quantity_per_purchase: Optional[float] = None
     avg_consumption_rate: Optional[float] = None
     predicted_depletion_date: Optional[str] = None
+    days_until_depletion: Optional[float] = None
     suggested_quantity: Optional[float] = None
     confidence_level: str
     urgency: str

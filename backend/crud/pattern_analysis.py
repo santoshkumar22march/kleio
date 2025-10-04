@@ -44,6 +44,7 @@ def save_or_update_prediction(
         existing.avg_quantity_per_purchase = analysis_result["avg_quantity_per_purchase"]
         existing.avg_consumption_rate = analysis_result["avg_consumption_rate"]
         existing.predicted_depletion_date = analysis_result["predicted_depletion_date"]
+        existing.days_until_depletion = analysis_result["days_until_depletion"]
         existing.suggested_quantity = analysis_result["suggested_quantity"]
         existing.confidence_level = analysis_result["confidence_level"]
         existing.urgency = analysis_result["urgency"]
@@ -66,6 +67,7 @@ def save_or_update_prediction(
             avg_quantity_per_purchase=analysis_result["avg_quantity_per_purchase"],
             avg_consumption_rate=analysis_result["avg_consumption_rate"],
             predicted_depletion_date=analysis_result["predicted_depletion_date"],
+            days_until_depletion=analysis_result["days_until_depletion"],
             suggested_quantity=analysis_result["suggested_quantity"],
             confidence_level=analysis_result["confidence_level"],
             urgency=analysis_result["urgency"],

@@ -18,6 +18,7 @@ import RecipeGenerator from '@/components/RecipeGenerator';
 import SavedRecipes from '@/components/SavedRecipes';
 import SmartShoppingList from '@/components/SmartShoppingList';
 import PatternInsights from '@/components/PatternInsights';
+import PatternSummaryCards from '@/components/PatternSummaryCards';
 import api from '@/lib/api';
 
 interface InventoryItem {
@@ -131,6 +132,11 @@ const DashboardEnhanced = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 sm:py-8">
+        {/* Pattern Summary Cards */}
+        <div className="mb-6 sm:mb-8">
+          <PatternSummaryCards />
+        </div>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="hover:shadow-md transition-shadow">
