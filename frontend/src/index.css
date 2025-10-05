@@ -8,46 +8,49 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 15%;
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 15%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 145 65% 42%;
+    /* Primary: Deep Teal (#0D9488) */
+    --primary: 173 80% 40%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 28 90% 55%;
+    /* Secondary: Warm Amber (#F59E0B) */
+    --secondary: 37 92% 50%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
-
-    --accent: 200 95% 45%;
+    /* Accent: Rich Purple (#7C3AED) */
+    --accent: 262 83% 57%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 145 65% 42%;
+    --muted: 214 32% 91%;
+    --muted-foreground: 215 16% 47%;
+
+    --border: 210 40% 90%;
+    --input: 210 40% 90%;
+    --ring: 173 80% 40%;
 
     --radius: 1rem;
 
-    /* Custom gradients - Indian inspired */
-    --gradient-hero: linear-gradient(135deg, hsl(28 90% 55%) 0%, hsl(145 65% 42%) 100%);
-    --gradient-feature: linear-gradient(135deg, hsl(28 90% 95%) 0%, hsl(145 65% 95%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(200 95% 45%) 0%, hsl(145 65% 42%) 100%);
-    
-    /* Shadows */
-    --shadow-soft: 0 4px 20px -2px hsl(145 65% 42% / 0.1);
-    --shadow-medium: 0 8px 30px -4px hsl(145 65% 42% / 0.15);
-    --shadow-strong: 0 20px 60px -10px hsl(145 65% 42% / 0.25);
-    
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(173 80% 40%) 0%, hsl(162 73% 46%) 50%, hsl(188 94% 40%) 100%);
+    --gradient-feature: linear-gradient(135deg, hsl(173 80% 40% / 0.08) 0%, hsl(262 83% 57% / 0.08) 50%, hsl(37 92% 50% / 0.08) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(37 92% 50%) 0%, hsl(24 95% 50%) 100%);
+
+    /* Shadows tuned to teal */
+    --shadow-soft: 0 4px 20px -2px hsl(173 80% 40% / 0.12);
+    --shadow-medium: 0 8px 30px -4px hsl(173 80% 40% / 0.16);
+    --shadow-strong: 0 20px 60px -10px hsl(173 80% 40% / 0.28);
+
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
