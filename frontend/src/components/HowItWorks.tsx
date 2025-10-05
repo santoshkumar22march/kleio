@@ -56,13 +56,13 @@ export const HowItWorks = () => {
                 {index + 1}
               </div>
 
-              <div className="bg-card rounded-2xl p-8 shadow-soft border border-border/50 h-full space-y-4 hover:shadow-medium transition-smooth">
+              <div className="backdrop-blur-xl bg-white/80 border border-teal-100 rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-500 h-full space-y-4">
                 <div className={`w-16 h-16 rounded-2xl ${step.color} flex items-center justify-center`}>
                   <step.icon className="w-8 h-8" />
                 </div>
-                
-                <h3 className="text-xl font-semibold">{step.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+
+                <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
+                <p className="text-slate-600 leading-relaxed">{step.description}</p>
               </div>
 
               {/* Connector line (except for last item) */}
