@@ -1,24 +1,43 @@
-from functools import partial
+# LangChain agent that wraps Kleio.ai backend functions as tools
+# PURE WRAPPER APPROACH: Tools call existing functions, return data, LLM formats response
+
+from typing import Dict, List, Any, Optional
+from datetime import datetime, date
 import logging
+import json
+import asyncio
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 from sqlalchemy.orm import Session
 
 from config import settings
+from crud.inventory import create_inventory_item, get_user_inventory
+from schemas.inventory import InventoryCreate
+from utils.pattern_analyzer import generate_shopping_list
+from utils.gemini_client import get_gemini_client
+from models.inventory import ItemStatus
 from database import get_db
-from agent.tools.inventory_tools import add_items_wrapper, query_inventory_wrapper
-from agent.tools.recipe_tools import check_recipe_feasibility
-from agent.tools.shopping_tools import get_shopping_wrapper
 
 logger = logging.getLogger(__name__)
 
 
+# Agent setup and process_message function
+
 def create_agent(firebase_uid: str, db_session: Session):
     """
     Create LangChain agent for a user with conversation memory.
+    
+    Args:
+        firebase_uid: User's Firebase UID
+        db_session: Database session
+        
+    Returns:
+        Configured agent with tools and memory
     """
     
+    # Initialize Gemini model
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
         google_api_key=settings.gemini_api_key,
@@ -26,37 +45,293 @@ def create_agent(firebase_uid: str, db_session: Session):
         convert_system_message_to_human=True
     )
     
-    # Bind the firebase_uid and db_session to the tool functions
-    add_items_tool = partial(add_items_wrapper, firebase_uid=firebase_uid, db_session=db_session)
-    query_inventory_tool = partial(query_inventory_wrapper, firebase_uid=firebase_uid, db_session=db_session)
-    get_shopping_tool = partial(get_shopping_wrapper, firebase_uid=firebase_uid, db_session=db_session)
-    check_recipe_tool = partial(check_recipe_feasibility, firebase_uid=firebase_uid, db_session=db_session)
+    # ============================================================================
+    # PURE WRAPPER FUNCTIONS - Just call existing backend functions
+    # The LLM will format natural language responses based on the returned data
+    # ============================================================================
+    
+    def add_items_wrapper(items_text: str) -> str:
+        """
+        Add items to user's inventory from natural language input.
+        
+        Args:
+            items_text: Natural language text like "bought 2kg tomatoes and 1 liter milk"
+            
+        Returns:
+            JSON string with added items details for the LLM to format
+        """
+        logger.info(f"🔧 TOOL: add_items_wrapper | Input: {items_text}")
+        try:
+            # Step 1: Parse natural language using Gemini
+            gemini = get_gemini_client()
+            
+            prompt = f"""
+Parse this natural language text into structured grocery items:
+"{items_text}"
 
+Return ONLY valid JSON array (no markdown):
+[
+  {{"item_name": "tomatoes", "quantity": 2.0, "unit": "kg", "category": "vegetables"}},
+  {{"item_name": "milk", "quantity": 1.0, "unit": "liter", "category": "dairy"}}
+]
+
+Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverages, meat, seafood, bakery, frozen, oils, condiments, others
+"""
+            
+            response = gemini.client.models.generate_content(
+                model=gemini.MODEL_ID,
+                contents=prompt,
+                config={"temperature": 0.3, "response_mime_type": "application/json"}
+            )
+            
+            items_data = json.loads(response.text)
+            
+            if not isinstance(items_data, list) or not items_data:
+                return json.dumps({"error": "Could not parse items", "items": []})
+            
+            # Step 2: Add items using existing CRUD function
+            added_items = []
+            for item_dict in items_data:
+                item = InventoryCreate(**item_dict)
+                created_item = create_inventory_item(db_session, firebase_uid, item)
+                added_items.append({
+                    "name": created_item.item_name,
+                    "quantity": float(created_item.quantity),
+                    "unit": created_item.unit,
+                    "category": created_item.category
+                })
+                logger.info(f"✅ DB: Added {created_item.item_name}")
+            
+            # Return structured data for LLM to format
+            result = {"success": True, "items_added": added_items, "count": len(added_items)}
+            logger.info(f"🔧 RESULT: {len(added_items)} items added")
+            return json.dumps(result)
+            
+        except Exception as e:
+            logger.error(f"❌ Error: {e}")
+            return json.dumps({"error": str(e), "success": False})
+    
+    def get_shopping_wrapper(urgency: Optional[str] = None) -> str:
+        """
+        Get smart shopping list based on usage patterns.
+        
+        Args:
+            urgency: Filter by urgency level ('urgent', 'this_week', or None for all)
+            
+        Returns:
+            JSON string with shopping list data for the LLM to format
+        """
+        logger.info(f"🔧 TOOL: get_shopping_wrapper | Urgency: {urgency}")
+        try:
+            # Call existing pattern analyzer function
+            shopping_list = generate_shopping_list(
+                db=db_session,
+                firebase_uid=firebase_uid,
+                urgency_filter=urgency
+            )
+            
+            # Return raw data for LLM to format naturally
+            result = {
+                "success": True,
+                "urgent": shopping_list["urgent"],
+                "this_week": shopping_list["this_week"],
+                "later": shopping_list["later"],
+                "total_items": len(shopping_list["urgent"]) + len(shopping_list["this_week"]) + len(shopping_list["later"])
+            }
+            
+            logger.info(f"🔧 RESULT: {result['total_items']} items in shopping list")
+            return json.dumps(result)
+            
+        except Exception as e:
+            logger.error(f"❌ Error: {e}")
+            return json.dumps({"error": str(e), "success": False})
+    
+    def check_recipe_feasibility(preferences: str = "") -> str:
+        """
+        Check if a recipe is feasible with current inventory items.
+        Generates a recipe and indicates what user has vs needs to buy.
+        
+        Args:
+            preferences: Recipe preferences like "quick dinner", "vegetarian lunch", etc.
+            
+        Returns:
+            JSON string with recipe feasibility data for the LLM to format
+        """
+        logger.info(f"🔧 TOOL: check_recipe_feasibility | Preferences: {preferences}")
+        try:
+            # Get user's inventory using existing CRUD
+            inventory_items = get_user_inventory(
+                db_session,
+                firebase_uid,
+                status=ItemStatus.ACTIVE,
+                limit=500
+            )
+            
+            if not inventory_items:
+                return json.dumps({
+                    "success": False,
+                    "error": "Empty inventory",
+                    "message": "No items in inventory to generate recipe"
+                })
+            
+            # Build available items list for recipe generation
+            available_items = [f"{item.item_name} ({item.quantity}{item.unit})" for item in inventory_items]
+            
+            # Parse preferences
+            filters = {"cooking_time": 45, "meal_type": "any", "cuisine": "Indian"}
+            prefs_lower = preferences.lower()
+            if "quick" in prefs_lower or "fast" in prefs_lower or "30" in prefs_lower:
+                filters["cooking_time"] = 30
+            if "lunch" in prefs_lower:
+                filters["meal_type"] = "lunch"
+            elif "dinner" in prefs_lower:
+                filters["meal_type"] = "dinner"
+            elif "breakfast" in prefs_lower:
+                filters["meal_type"] = "breakfast"
+            
+            # Call existing generate_recipe function
+            gemini = get_gemini_client()
+            
+            # Create async context for recipe generation
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            recipe = loop.run_until_complete(gemini.generate_recipe(
+                available_items=available_items,
+                dietary_preferences={
+                    "vegetarian": "vegetarian" in prefs_lower or "veg" in prefs_lower,
+                    "vegan": "vegan" in prefs_lower,
+                },
+                filters=filters
+            ))
+            
+            # Return recipe data for LLM to create natural response
+            result = {
+                "success": True,
+                "recipe_name": recipe.get("recipe_name"),
+                "description": recipe.get("description"),
+                "cooking_time": recipe.get("cooking_time_minutes"),
+                "servings": recipe.get("servings"),
+                "difficulty": recipe.get("difficulty"),
+                "ingredients": recipe.get("ingredients", []),
+                "available_count": sum(1 for ing in recipe.get("ingredients", []) if ing.get("available")),
+                "missing_count": sum(1 for ing in recipe.get("ingredients", []) if not ing.get("available")),
+                "feasible": sum(1 for ing in recipe.get("ingredients", []) if ing.get("available")) >= len(recipe.get("ingredients", [])) * 0.7  # 70% available
+            }
+            
+            logger.info(f"🔧 RESULT: Recipe '{result['recipe_name']}' - {result['available_count']}/{len(recipe.get('ingredients', []))} items available")
+            return json.dumps(result)
+            
+        except Exception as e:
+            logger.error(f"❌ Error: {e}")
+            return json.dumps({"error": str(e), "success": False})
+    
+    def query_inventory_wrapper(category: Optional[str] = None) -> str:
+        """
+        Query user's current inventory items.
+        
+        Args:
+            category: Optional category filter (e.g., 'vegetables', 'dairy')
+            
+        Returns:
+            JSON string with inventory data for the LLM to format
+        """
+        logger.info(f"🔧 TOOL: query_inventory_wrapper | Category: {category}")
+        try:
+            # Call existing CRUD function
+            inventory_items = get_user_inventory(
+                db_session,
+                firebase_uid,
+                status=ItemStatus.ACTIVE,
+                category=category,
+                limit=100
+            )
+            
+            if not inventory_items:
+                return json.dumps({
+                    "success": True,
+                    "items": [],
+                    "total": 0,
+                    "message": f"No {category} items found" if category else "Inventory is empty"
+                })
+            
+            # Convert to JSON-serializable format
+            items_data = []
+            for item in inventory_items:
+                expiry_info = None
+                if item.expiry_date:
+                    days_left = (item.expiry_date - date.today()).days
+                    expiry_info = {
+                        "date": item.expiry_date.isoformat(),
+                        "days_left": days_left,
+                        "status": "urgent" if days_left <= 3 else "soon" if days_left <= 7 else "ok"
+                    }
+                
+                items_data.append({
+                    "name": item.item_name,
+                    "quantity": float(item.quantity),
+                    "unit": item.unit,
+                    "category": item.category,
+                    "expiry": expiry_info,
+                    "added_date": item.added_date.isoformat()
+                })
+            
+            # Group by category
+            by_category = {}
+            for item_data in items_data:
+                cat = item_data["category"]
+                if cat not in by_category:
+                    by_category[cat] = []
+                by_category[cat].append(item_data)
+            
+            result = {
+                "success": True,
+                "items": items_data,
+                "by_category": by_category,
+                "total": len(items_data)
+            }
+            
+            logger.info(f"🔧 RESULT: {len(items_data)} items in inventory")
+            return json.dumps(result)
+            
+        except Exception as e:
+            logger.error(f"❌ Error: {e}")
+            return json.dumps({"error": str(e), "success": False})
+    
+    # ============================================================================
+    # Register tools with LangChain
+    # ============================================================================
     from langchain.tools import StructuredTool
     
     tools = [
         StructuredTool.from_function(
-            func=add_items_tool,
+            func=add_items_wrapper,
             name="add_inventory_items",
             description="Add items to inventory from natural language (e.g., 'bought 2kg tomatoes and milk'). Returns JSON with added items that you MUST format into a natural response."
         ),
         StructuredTool.from_function(
-            func=query_inventory_tool,
+            func=query_inventory_wrapper,
             name="query_inventory",
             description="Query user's current inventory items. Optional category filter. Returns JSON with items data that you MUST format into a natural response."
         ),
         StructuredTool.from_function(
-            func=get_shopping_tool,
+            func=get_shopping_wrapper,
             name="get_shopping_list",
             description="Generate smart shopping list based on usage patterns. Returns JSON with urgent/this_week/later items that you MUST format into a natural response."
         ),
         StructuredTool.from_function(
-            func=check_recipe_tool,
+            func=check_recipe_feasibility,
             name="check_recipe_feasibility",
             description="Check if a recipe is feasible with current inventory. Generates full recipe with ingredients marked as available/missing. Returns JSON that you MUST format into a helpful natural response."
         ),
     ]
     
+    # ============================================================================
+    # System Prompt - Define agent behavior
+    # ============================================================================
     system_message = f"""You are Kleio, a friendly household inventory assistant for Indian families.
 
 USER ID: {firebase_uid}
@@ -112,6 +387,7 @@ User: "can I make dinner with what I have?"
 You: Call check_recipe_feasibility("dinner") → Format JSON showing recipe feasibility
 """
     
+    # Create agent with memory
     memory = MemorySaver()
     agent = create_react_agent(
         llm,
