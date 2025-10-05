@@ -9,7 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sparkles, Package, Receipt, ChefHat, LogOut, TrendingUp, AlertTriangle, ShoppingCart, Calendar } from 'lucide-react';
+import { Sparkles, Package, Receipt, ChefHat, LogOut, TrendingUp, AlertTriangle, ShoppingCart, Calendar, Settings } from 'lucide-react';
+
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import ReceiptScanner from '@/components/ReceiptScanner';
@@ -121,6 +122,9 @@ const DashboardEnhanced = () => {
                 <p className="text-sm font-medium">{user?.email}</p>
                 <p className="text-xs text-muted-foreground">Welcome back!</p>
               </div>
+              <Button variant="outline" size="icon" onClick={() => navigate('/settings')}>
+                <Settings className="w-4 h-4" />
+              </Button>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Sign Out</span>

@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Onboarding from "./pages/Onboarding";
 import DashboardEnhanced from "./pages/DashboardEnhanced";
+import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,18 +35,23 @@ const App = () => (
               </ProtectedRoute>
             } />
             
+import SettingsPage from "./pages/Settings";
+
+// ...
+
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            } />
+
             {/* App Routes (Protected) */}
-            <Route path="/app/dashboard" element={
+            <Route path="/app" element={
               <ProtectedRoute>
                 <DashboardEnhanced />
               </ProtectedRoute>
             } />
-            <Route path="/app/*" element={
-              <ProtectedRoute>
-                <DashboardEnhanced />
-              </ProtectedRoute>
-            } />
-            
+
             {/* Catch-all 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>

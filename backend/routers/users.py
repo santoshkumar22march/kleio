@@ -3,11 +3,14 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from datetime import datetime, timezone
 
 from database import get_db
 from utils.auth import get_current_user
 from schemas.user import UserCreate, UserResponse, UserUpdate
+from schemas.telegram import VerificationCode
 from crud.user import create_or_update_user, get_user, update_user
+from crud.telegram import get_verification_code, delete_verification_code
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -31,7 +34,7 @@ async def create_or_update_profile(
     - **language_preference**: Preferred language (en, hi, ta)
     - **dietary_preferences**: Dict of dietary restrictions
     - **region**: Region for festival filtering (north, south, east, west, all)
-    """
+    """    
     user = create_or_update_user(db, firebase_uid, user_data)
     return user
 
@@ -83,6 +86,39 @@ async def update_profile(
     return user
 
 
+@router.post("/verify-telegram", summary="Verify Telegram bot", description="Verify the one-time code from the Telegram bot and link accounts")
+async def verify_telegram(
+    verification_data: VerificationCode,
+    firebase_uid: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    code = verification_data.verification_code
+    
+    # 1. Look up verification code
+    verification_code = get_verification_code(db, code)
+    
+    if not verification_code:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid verification code.")
+
+    # 2. Check if code is expired
+    if verification_code.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verification code has expired.")
+
+    # 3. Get user profile
+    user = get_user(db, firebase_uid)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User profile not found.")
+
+    # 4. Link accounts
+    user.telegram_id = verification_code.telegram_id
+    db.commit()
+
+    # 5. Delete the verification code
+    delete_verification_code(db, code)
+
+    return {"success": True, "message": "Telegram account linked successfully."}
+
+
 @router.get(
     "/me",
     summary="Get current user info",
@@ -95,4 +131,3 @@ async def get_me(firebase_uid: str = Depends(get_current_user)):
         "firebase_uid": firebase_uid,
         "authenticated": True
     }
-

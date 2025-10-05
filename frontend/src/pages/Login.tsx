@@ -40,9 +40,8 @@ const Login = () => {
       await signIn(email, password);
       toast({
         title: 'Welcome back!',
-        description: 'You have successfully signed in.',
       });
-      navigate('/app/dashboard');
+      navigate('/app');
     } catch (error: any) {
       toast({
         title: 'Sign In Failed',
@@ -62,7 +61,7 @@ const Login = () => {
         title: 'Welcome back!',
         description: 'You have successfully signed in with Google.',
       });
-      navigate('/app/dashboard');
+      navigate('/app');
     } catch (error: any) {
       toast({
         title: 'Google Sign In Failed',

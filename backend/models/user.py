@@ -8,7 +8,7 @@ Architecture Note:
 - We manage: household preferences, dietary restrictions, inventory data
 """
 
-from sqlalchemy import Column, String, Integer, TIMESTAMP, JSON
+from sqlalchemy import Column, String, Integer, TIMESTAMP, JSON, BigInteger
 from sqlalchemy.sql import func
 from database import Base
 
@@ -18,6 +18,7 @@ class User(Base):
     
     # Primary key - Firebase UID
     firebase_uid = Column(String(128), primary_key=True, index=True)
+    telegram_id = Column(BigInteger, unique=True, nullable=True, index=True)
     
     # Profile information
     phone_number = Column(String(20), unique=True, nullable=True, index=True)

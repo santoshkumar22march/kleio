@@ -99,6 +99,20 @@ def update_user(db: Session, firebase_uid: str, user_data: UserUpdate) -> Option
     return user
 
 
+def get_user_by_telegram_id(db: Session, telegram_id: int) -> Optional[User]:
+    """
+    Get user by Telegram ID
+    
+    Args:
+        db: Database session
+        telegram_id: Telegram user ID
+        
+    Returns:
+        User | None: User object if found, None otherwise
+    """
+    return db.query(User).filter(User.telegram_id == telegram_id).first()
+
+
 def get_user_by_phone(db: Session, phone_number: str) -> Optional[User]:
     """
     Get user by phone number (for WhatsApp integration)

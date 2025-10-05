@@ -58,7 +58,7 @@ const Onboarding = () => {
         title: 'Profile Created!',
         description: 'Welcome to Kleio.ai. Let\'s get started!',
       });
-      navigate('/app/dashboard');
+      navigate('/app');
     },
     onError: (error: any) => {
       toast({
