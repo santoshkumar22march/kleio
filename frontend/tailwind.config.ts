@@ -57,6 +57,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        brand: {
+          teal: "#0D9488",
+          amber: "#F59E0B",
+          purple: "#7C3AED",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
