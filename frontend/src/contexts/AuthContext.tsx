@@ -38,20 +38,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    // Listen for auth state changes only if auth is available
+    if (auth && typeof onAuthStateChanged === 'function') {
+      const unsubscribe = onAuthStateChanged(auth as any, (user) => {
+        setUser(user as User | null);
+        setLoading(false);
+      });
 
-    // Cleanup subscription
-    return unsubscribe;
+      // Cleanup subscription
+      return unsubscribe;
+    }
+
+    // If auth is not configured, stop loading and leave user null
+    setLoading(false);
+    return () => {};
   }, []);
+
+  // Helper to assert auth availability
+  const ensureAuth = () => {
+    if (!auth) {
+      throw new Error('Authentication is not configured. Provide Firebase config via environment variables.');
+    }
+  };
 
   // Sign up with email and password
   const signUp = async (email: string, password: string): Promise<User> => {
+    ensureAuth();
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(auth as any, email, password);
       return result.user;
     } catch (error: any) {
       console.error('Sign up error:', error);
@@ -61,8 +75,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sign in with email and password
   const signIn = async (email: string, password: string): Promise<User> => {
+    ensureAuth();
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth as any, email, password);
       return result.user;
     } catch (error: any) {
       console.error('Sign in error:', error);
@@ -72,8 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sign in with Google
   const signInWithGoogle = async (): Promise<User> => {
+    ensureAuth();
+    if (!googleProvider) throw new Error('Google provider is not configured.');
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth as any, googleProvider as any);
       return result.user;
     } catch (error: any) {
       console.error('Google sign in error:', error);
@@ -83,8 +100,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sign out
   const signOut = async (): Promise<void> => {
+    ensureAuth();
     try {
-      await firebaseSignOut(auth);
+      await firebaseSignOut(auth as any);
     } catch (error: any) {
       console.error('Sign out error:', error);
       throw new Error('Failed to sign out');
@@ -130,4 +148,3 @@ function getFirebaseErrorMessage(errorCode: string): string {
       return 'An error occurred. Please try again.';
   }
 }
-
