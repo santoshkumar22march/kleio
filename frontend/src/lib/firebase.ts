@@ -8,33 +8,38 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? "",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? "",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? "",
 };
 
 // Validate configuration
-if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
-  console.error('❌ Firebase configuration is missing!');
+const isConfigValid = Boolean(
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId
+);
+
+if (!isConfigValid) {
+  console.error('❌ Firebase configuration is missing or invalid. Skipping Firebase initialization.');
   console.error('Please create a .env file with:');
   console.error('VITE_FIREBASE_API_KEY=...');
   console.error('VITE_FIREBASE_AUTH_DOMAIN=...');
   console.error('VITE_FIREBASE_PROJECT_ID=...');
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only when configuration is valid
+let app;
+let auth;
+let googleProvider;
 
-// Initialize Firebase Authentication
-export const auth = getAuth(app);
+if (isConfigValid) {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
+  // Configure Google provider
+  googleProvider.setCustomParameters({ prompt: 'select_account' });
+}
 
-// Google Auth Provider
-export const googleProvider = new GoogleAuthProvider();
-
-// Configure Google provider
-googleProvider.setCustomParameters({
-  prompt: 'select_account', // Always show account selection
-});
-
+export { auth, googleProvider };
 export default app;
-
