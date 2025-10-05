@@ -38,37 +38,37 @@ const benefits = [
 
 export const Benefits = () => {
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="py-24 bg-gradient-to-br from-teal-500/5 to-purple-500/5">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 animate-fade-in">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
-            Real Impact,
-            <span className="text-primary"> Measured Results</span>
+          <h2 className="text-4xl lg:text-5xl font-bold">
+            <span className="bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">Real Impact</span>
+            <span className="text-foreground">, Measured Results</span>
           </h2>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-xl text-slate-600">
             Join thousands of Indian families already transforming their households
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {benefits.map((benefit, index) => (
-            <Card 
+            <Card
               key={index}
-              className="group hover:shadow-medium transition-smooth border-border/50 animate-scale-in overflow-hidden"
+              className="group backdrop-blur-xl bg-white/60 border border-teal-100 rounded-3xl hover:shadow-2xl hover:shadow-teal-500/10 hover:border-teal-300 transition-all duration-500 animate-scale-in overflow-hidden"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className={`h-2 bg-gradient-to-r ${benefit.gradient}`} />
-              <CardContent className="p-6 space-y-4">
-                <div className="w-14 h-14 rounded-2xl gradient-feature flex items-center justify-center group-hover:scale-110 transition-smooth">
+              <CardContent className="p-8 space-y-5">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500/20 to-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-smooth">
                   <benefit.icon className={`w-7 h-7 ${benefit.color}`} />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <div className={`text-sm font-semibold ${benefit.color}`}>
+                  <div className={`text-lg font-semibold ${benefit.color}`}>
                     {benefit.stat}
                   </div>
-                  <h3 className="text-xl font-bold">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <h3 className="text-2xl font-bold text-slate-900">{benefit.title}</h3>
+                  <p className="text-slate-600 leading-relaxed">
                     {benefit.description}
                   </p>
                 </div>
