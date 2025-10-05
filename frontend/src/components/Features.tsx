@@ -48,12 +48,12 @@ const features = [
 
 export const Features = () => {
   return (
-    <section className="py-24 bg-muted/30">
+    <section className="py-24 bg-gradient-to-br from-teal-50 to-cyan-50">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 animate-fade-in">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
-            Intelligence That
-            <span className="text-primary"> Understands India</span>
+          <h2 className="text-4xl lg:text-5xl font-bold">
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Intelligence That</span>
+            <span className="text-foreground"> Understands India</span>
           </h2>
           <p className="text-xl text-muted-foreground">
             From festival prep to daily meals, Kleio.ai brings AI power to every corner of your household
@@ -62,17 +62,17 @@ export const Features = () => {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {features.map((feature, index) => (
-            <Card 
-              key={index} 
-              className="group hover:shadow-medium transition-smooth border-border/50 animate-fade-in-up"
+            <Card
+              key={index}
+              className="group backdrop-blur-xl bg-white/60 border border-teal-100 rounded-3xl hover:shadow-2xl hover:shadow-teal-500/10 hover:border-teal-300 hover:-translate-y-2 transition-all duration-500 animate-fade-in-up"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardContent className="p-6 space-y-4">
-                <div className="w-12 h-12 rounded-xl gradient-feature flex items-center justify-center group-hover:scale-110 transition-smooth">
+              <CardContent className="p-8 space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500/20 to-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-smooth">
                   <feature.icon className={`w-6 h-6 ${feature.color}`} />
                 </div>
-                <h3 className="font-semibold text-lg leading-tight">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                <h3 className="text-2xl font-semibold leading-tight text-slate-900">{feature.title}</h3>
+                <p className="text-slate-600 leading-relaxed">{feature.description}</p>
               </CardContent>
             </Card>
           ))}
