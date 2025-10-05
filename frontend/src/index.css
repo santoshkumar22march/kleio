@@ -125,4 +125,29 @@ All colors MUST be HSL.
   .transition-smooth {
     transition: var(--transition-smooth);
   }
+
+  /* Navigation underline effect */
+  .nav-link {
+    @apply relative transition-smooth hover:text-primary;
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    height: 2px;
+    width: 0;
+    background: var(--gradient-accent);
+    transition: width 0.3s ease;
+    border-radius: 9999px;
+  }
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    width: 100%;
+  }
+
+  /* Animation delays as utility classes */
+  .anim-delay-200 { animation-delay: 0.2s; }
+  .anim-delay-1000 { animation-delay: 1s; }
+  .anim-delay-2000 { animation-delay: 2s; }
 }

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
 import heroImage from "@/assets/hero-kitchen.jpg";
 
 export const Hero = () => {
@@ -14,7 +15,8 @@ export const Hero = () => {
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "1s" }} />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float anim-delay-1000" />
+        <div className="absolute -top-24 right-1/3 w-[28rem] h-[28rem] gradient-accent opacity-[0.08] rounded-full blur-3xl animate-float anim-delay-2000" />
       </div>
 
       <div className="container mx-auto px-4 py-20 relative z-10">
@@ -38,11 +40,26 @@ export const Hero = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="hero" size="lg" className="group" onClick={() => navigate('/signup')}>
+              <Button
+                variant="hero"
+                size="lg"
+                className="group"
+                onClick={() => {
+                  toast.success('Let’s get you early access ✨');
+                  navigate('/signup');
+                }}
+              >
                 Get Early Access
                 <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button variant="outline" size="lg" onClick={() => navigate('/login')}>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  toast.message('Opening sign in…');
+                  navigate('/login');
+                }}
+              >
                 Sign In
               </Button>
             </div>
@@ -77,7 +94,7 @@ export const Hero = () => {
           </div>
 
           {/* Right Image */}
-          <div className="relative animate-scale-in" style={{ animationDelay: "0.2s" }}>
+          <div className="relative animate-scale-in anim-delay-200">
             <div className="relative rounded-3xl overflow-hidden shadow-strong">
               <img 
                 src={heroImage} 
