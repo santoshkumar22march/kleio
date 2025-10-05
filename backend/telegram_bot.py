@@ -73,7 +73,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await bot.send_chat_action(chat_id=chat_id, action="typing")
 
-    response = await process_message(user.firebase_uid, message_text)
+    response = await process_message(user.firebase_uid, message_text, str(chat_id))
 
     await update.message.reply_text(response)
 
