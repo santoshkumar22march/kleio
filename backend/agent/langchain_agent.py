@@ -146,38 +146,65 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
             logger.error(f"❌ Error: {e}")
             return json.dumps({"error": str(e), "success": False})
     
-    def check_recipe_feasibility(preferences: str = "") -> str:
+    def check_ingredients_for_specific_recipe(recipe_name: str) -> str:
         """
-        Check if a recipe is feasible with current inventory items.
-        Generates a recipe and indicates what user has vs needs to buy.
-        
-        Args:
-            preferences: Recipe preferences like "quick dinner", "vegetarian lunch", etc.
-            
-        Returns:
-            JSON string with recipe feasibility data for the LLM to format
+        Checks if a specific recipe is feasible with the user's current inventory.
         """
+        logger.info(f"🔧 TOOL: check_specific_recipe_feasibility | Recipe: {recipe_name}")
+        try:
+            # Step 1: Get recipe ingredients from Gemini
+            gemini = get_gemini_client()
+            prompt = f"List the essential ingredients for the Indian dish '{recipe_name}'. Return ONLY a JSON array of strings. Example: [ingredient1, ingredient2, ...]."
+            response = gemini.client.models.generate_content(
+                model=gemini.MODEL_ID,
+                contents=prompt,
+                config={"temperature": 0.1, "response_mime_type": "application/json"}
+            )
+            recipe_ingredients = json.loads(response.text)
+
+            # Step 2: Get user's inventory
+            inventory_items = get_user_inventory(db_session, firebase_uid, status=ItemStatus.ACTIVE, limit=500)
+            inventory_item_names = {item.item_name.lower() for item in inventory_items}
+
+            # Step 3: Compare and find missing ingredients
+            have_ingredients = []
+            missing_ingredients = []
+            for ingredient in recipe_ingredients:
+                if ingredient.lower() in inventory_item_names:
+                    have_ingredients.append(ingredient)
+                else:
+                    missing_ingredients.append(ingredient)
+
+            result = {
+                "success": True,
+                "recipe_name": recipe_name,
+                "have_ingredients": have_ingredients,
+                "missing_ingredients": missing_ingredients,
+                "feasible": len(missing_ingredients) == 0
+            }
+            return json.dumps(result)
+
+        except Exception as e:
+            logger.error(f"❌ Error in check_specific_recipe_feasibility: {e}")
+            return json.dumps({"error": str(e), "success": False})
+
+    def suggest_recipe_from_inventory(preferences: str = "") -> str:
+        # Check if a recipe is feasible with current inventory items.
         logger.info(f"🔧 TOOL: check_recipe_feasibility | Preferences: {preferences}")
         try:
-            # Get user's inventory using existing CRUD
             inventory_items = get_user_inventory(
                 db_session,
                 firebase_uid,
                 status=ItemStatus.ACTIVE,
                 limit=500
             )
-            
             if not inventory_items:
                 return json.dumps({
                     "success": False,
                     "error": "Empty inventory",
                     "message": "No items in inventory to generate recipe"
                 })
-            
-            # Build available items list for recipe generation
             available_items = [f"{item.item_name} ({item.quantity}{item.unit})" for item in inventory_items]
-            
-            # Parse preferences
             filters = {"cooking_time": 45, "meal_type": "any", "cuisine": "Indian"}
             prefs_lower = preferences.lower()
             if "quick" in prefs_lower or "fast" in prefs_lower or "30" in prefs_lower:
@@ -188,17 +215,12 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
                 filters["meal_type"] = "dinner"
             elif "breakfast" in prefs_lower:
                 filters["meal_type"] = "breakfast"
-            
-            # Call existing generate_recipe function
             gemini = get_gemini_client()
-            
-            # Create async context for recipe generation
             try:
                 loop = asyncio.get_event_loop()
             except RuntimeError:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-            
             recipe = loop.run_until_complete(gemini.generate_recipe(
                 available_items=available_items,
                 dietary_preferences={
@@ -207,8 +229,6 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
                 },
                 filters=filters
             ))
-            
-            # Return recipe data for LLM to create natural response
             result = {
                 "success": True,
                 "recipe_name": recipe.get("recipe_name"),
@@ -219,15 +239,15 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
                 "ingredients": recipe.get("ingredients", []),
                 "available_count": sum(1 for ing in recipe.get("ingredients", []) if ing.get("available")),
                 "missing_count": sum(1 for ing in recipe.get("ingredients", []) if not ing.get("available")),
-                "feasible": sum(1 for ing in recipe.get("ingredients", []) if ing.get("available")) >= len(recipe.get("ingredients", [])) * 0.7  # 70% available
+                "feasible": sum(1 for ing in recipe.get("ingredients", []) if ing.get("available")) >= len(recipe.get("ingredients", [])) * 0.7
             }
-            
             logger.info(f"🔧 RESULT: Recipe '{result['recipe_name']}' - {result['available_count']}/{len(recipe.get('ingredients', []))} items available")
             return json.dumps(result)
-            
         except Exception as e:
             logger.error(f"❌ Error: {e}")
             return json.dumps({"error": str(e), "success": False})
+
+
     
     def query_inventory_wrapper(category: Optional[str] = None) -> str:
         """
@@ -323,9 +343,14 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
             description="Generate smart shopping list based on usage patterns. Returns JSON with urgent/this_week/later items that you MUST format into a natural response."
         ),
         StructuredTool.from_function(
-            func=check_recipe_feasibility,
-            name="check_recipe_feasibility",
-            description="Check if a recipe is feasible with current inventory. Generates full recipe with ingredients marked as available/missing. Returns JSON that you MUST format into a helpful natural response."
+            func=suggest_recipe_from_inventory,
+            name="suggest_recipe_from_inventory",
+            description="Suggest a recipe from current inventory. Generates full recipe with ingredients marked as available/missing. Returns JSON that you MUST format into a helpful natural response."
+        ),
+        StructuredTool.from_function(
+            func=check_ingredients_for_specific_recipe,
+            name="check_ingredients_for_specific_recipe",
+            description="Check if a specific recipe is feasible with current inventory. Returns JSON with ingredients that are available/missing. Returns JSON that you MUST format into a helpful natural response."
         ),
     ]
     
@@ -341,6 +366,7 @@ HOW YOU WORK:
 2. You MUST call the appropriate tool for every user request
 3. You MUST format the JSON data into natural, friendly responses
 4. You NEVER make up data - only use what tools return
+5. When user asks for a recipe, you should clarify the preferences (e.g. vegetarian, vegan, quick, lunch, dinner, breakfast)
 
 AVAILABLE TOOLS & WHEN TO USE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -359,9 +385,14 @@ AVAILABLE TOOLS & WHEN TO USE:
    Returns: JSON with urgent/this_week/later items
    You format as: Organized shopping list with urgency levels
 
-🍳 check_recipe_feasibility(preferences)
+🍳 suggest_recipe_from_inventory(preferences)
    When: User wants recipe suggestions
    Returns: JSON with recipe details and ingredient availability
+   You format as: Recipe summary with what they have vs need to buy
+
+🍳 check_ingredients_for_specific_recipe(recipe_name)
+   When: User wants to check ingredients for a specific recipe
+   Returns: JSON with ingredients that are available/missing
    You format as: Recipe summary with what they have vs need to buy
 
 RESPONSE STYLE:
