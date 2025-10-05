@@ -7,7 +7,7 @@ export const CTA = () => {
     <section className="py-24 relative overflow-hidden">
       {/* Gradient background */}
       <div className="absolute inset-0 gradient-hero opacity-90" />
-      
+
       {/* Animated elements */}
       <div className="absolute top-20 left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float" />
       <div className="absolute bottom-20 right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "1.5s" }} />
@@ -26,20 +26,20 @@ export const CTA = () => {
           </h2>
 
           <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-            Be among the first Indian families to experience AI-powered household intelligence. 
+            Be among the first Indian families to experience AI-powered household intelligence.
             Early access members get lifetime premium benefits.
           </p>
 
           {/* Waitlist form */}
           <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <Input 
-              type="email" 
+            <Input
+              type="email"
               placeholder="Enter your email"
-              className="bg-white/95 border-white/20 h-12 text-base backdrop-blur-sm"
+              className="bg-white/95 border-white/20 h-12 text-base backdrop-blur-sm rounded-full px-6"
             />
-            <Button 
-              size="lg" 
-              className="bg-white text-primary hover:bg-white/90 shadow-strong h-12 px-8 font-semibold group"
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-strong h-12 px-8 font-semibold rounded-full group"
             >
               Get Early Access
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
