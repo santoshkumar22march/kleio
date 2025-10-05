@@ -1,7 +1,5 @@
-"""
-Configuration management for Kleio.ai backend
-Loads environment variables and provides app settings
-"""
+# Configuration management for Kleio.ai backend
+# Loads environment variables and provides app settings
 
 from pydantic_settings import BaseSettings
 from typing import List

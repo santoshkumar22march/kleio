@@ -1,10 +1,7 @@
-"""
-Telegram Bot for Kleio
-"""
 
 import os
 import logging
-from telegram import Update, Bot
+from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
@@ -36,13 +33,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.close()
 
     if user:
+        keyboard = [
+            [InlineKeyboardButton("Add Items", switch_inline_query_current_chat="I bought ")],
+            [InlineKeyboardButton("Check Inventory", switch_inline_query_current_chat="What do I have?")],
+            [InlineKeyboardButton("Get a Recipe", switch_inline_query_current_chat="What can I make for dinner?")],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
         await update.message.reply_text(
-            "👋 Welcome back!\n\nYour account is connected! You can now:\n"
-            "• Add items: 'bought 2kg tomatoes'\n"
-            "• Get shopping list: 'shopping list'\n"
-            "• Get recipes: 'recipe for dinner'\n"
-            "• Check inventory: 'what do I have?'\n\n"
-            "Try asking me something!"
+            f"👋 Welcome back, {update.message.from_user.first_name}! I'm Kleio, your personal kitchen assistant.\n\nWhat would you like to do first?",
+            reply_markup=reply_markup
         )
     else:
         db = SessionLocal()
@@ -56,6 +55,30 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"3. Enter this code: {code}\n\n"
             "⏰ Code expires in 10 minutes."
         )
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /help command."""
+    help_text = """
+Of course! Here's how I can help you manage your kitchen:
+
+📦 *Inventory Management*
+• *Add items:* Just tell me what you bought! Try: "bought 2kg onions, 1L milk, and a loaf of bread"
+• *Check stock:* Ask me what you have. Try: "what vegetables do I have?" or "do I have any milk?"
+
+🍳 *Recipes & Cooking*
+• *Get ideas:* Ask for a recipe based on your inventory. Try: "what can I make for dinner?"
+• *Check a specific recipe:* See if you can make a dish you have in mind. Try: "can I cook paneer butter masala?"
+
+🛒 *Smart Shopping*
+• *Generate a list:* I can predict what you need to buy. Try: "what should I buy this week?"
+
+⚙️ *Account*
+• /start - Re-links your account if you ever get disconnected.
+• /help - Shows this message again.
+
+Just type a message and I'll do my best to understand!
+"""
+    await update.message.reply_text(help_text, parse_mode='Markdown')
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle incoming text messages."""
@@ -75,7 +98,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     response = await process_message(user.firebase_uid, message_text, str(chat_id))
 
-    await update.message.reply_text(response)
+    await update.message.reply_text(response, parse_mode='MarkdownV2')
 
 
 def run_bot():
@@ -83,6 +106,7 @@ def run_bot():
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     logger.info("Starting Telegram bot...")

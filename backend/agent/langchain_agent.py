@@ -147,9 +147,7 @@ Categories: vegetables, fruits, dairy, staples, pulses, spices, snacks, beverage
             return json.dumps({"error": str(e), "success": False})
     
     def check_ingredients_for_specific_recipe(recipe_name: str) -> str:
-        """
-        Checks if a specific recipe is feasible with the user's current inventory.
-        """
+        # Checks if a specific recipe is feasible with the user's current inventory.
         logger.info(f"🔧 TOOL: check_specific_recipe_feasibility | Recipe: {recipe_name}")
         try:
             # Step 1: Get recipe ingredients from Gemini
@@ -367,6 +365,9 @@ HOW YOU WORK:
 3. You MUST format the JSON data into natural, friendly responses
 4. You NEVER make up data - only use what tools return
 5. When user asks for a recipe, you should clarify the preferences (e.g. vegetarian, vegan, quick, lunch, dinner, breakfast)
+6. When you return a response to user, make sure to follow a warm tone and make the user feel like you are a real person.
+7. Do not just respond with the tool call, always format the response in a natural way like a real person would.
+8. If the user asks anything apart from the tools, you should respond with a friendly and helpful message and ask them to visit the website kleio.ai to get more information.
 
 AVAILABLE TOOLS & WHEN TO USE:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -398,6 +399,8 @@ AVAILABLE TOOLS & WHEN TO USE:
 RESPONSE STYLE:
 ✅ Friendly and conversational (but not overly chatty)
 ✅ Use emojis appropriately: ✅ ❌ 🔴 🟡 🟢 📦 🛒 🍳
+✅ Use Telegram's MarkdownV2 for formatting (e.g., *bold*, _italic_).
+✅ IMPORTANT: You MUST escape the following characters with a backslash (\) in your response: _, *, [, ], (, ), ~, `, >, #, +, -, =, |, '{' or '}', ., !
 ✅ Indian context: kg, liters, INR, common Indian items
 ✅ Clear and actionable information
 ❌ Never say "I'll try" or "let me" - just call the tool and report results

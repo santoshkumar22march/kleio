@@ -1,7 +1,5 @@
-"""
-Database configuration and session management
-Uses SQLAlchemy ORM with PostgreSQL (Neon)
-"""
+# Database configuration and session management
+# Uses SQLAlchemy ORM with PostgreSQL (Neon)
 
 from sqlalchemy import create_engine,text
 from sqlalchemy.ext.declarative import declarative_base
