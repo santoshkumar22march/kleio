@@ -14,6 +14,7 @@ class InventoryCreate(BaseModel):
     category: str = Field(..., min_length=1, max_length=50, description="Category (vegetables, fruits, etc.)")
     quantity: Decimal = Field(..., gt=0, decimal_places=2, description="Quantity amount")
     unit: str = Field(..., min_length=1, max_length=20, description="Unit (kg, liters, pieces, etc.)")
+    estimated_shelf_life_days: Optional[int] = Field(default=None, description="Estimated shelf life in days")
     expiry_date: Optional[date] = Field(default=None, description="Expiry date (optional)")
     photo_url: Optional[str] = Field(default=None, max_length=255)
     

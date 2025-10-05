@@ -1,9 +1,8 @@
-# AI-powered endpoints for receipt parsing and recipe generation
-
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List
 import logging
+from datetime import date, timedelta
 
 from database import get_db
 from utils.auth import get_current_user
@@ -127,6 +126,10 @@ async def confirm_receipt_items(
     
     for item_data in items_data.items:
         try:
+            # Calculate expiry date if shelf life is provided
+            if item_data.estimated_shelf_life_days and item_data.estimated_shelf_life_days > 0:
+                item_data.expiry_date = date.today() + timedelta(days=item_data.estimated_shelf_life_days)
+            
             # create_inventory_item now handles upsert logic
             item = create_inventory_item(db, firebase_uid, item_data)
             created_or_updated.append(item)

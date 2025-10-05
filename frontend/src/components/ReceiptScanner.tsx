@@ -21,6 +21,8 @@ interface DetectedItem {
   quantity: number;
   unit: string;
   price?: number;
+  estimated_shelf_life_days?: number;
+  expiry_date?: string;
 }
 
 interface ReceiptScannerProps {
@@ -51,7 +53,16 @@ const ReceiptScanner = ({ onSuccess }: ReceiptScannerProps) => {
       return response.data;
     },
     onSuccess: (data) => {
-      setDetectedItems(data.items || []);
+      const itemsWithExpiry = (data.items || []).map(item => {
+        let expiry_date = undefined;
+        if (item.estimated_shelf_life_days && item.estimated_shelf_life_days > 0) {
+          const date = new Date();
+          date.setDate(date.getDate() + item.estimated_shelf_life_days);
+          expiry_date = date.toISOString().split('T')[0];
+        }
+        return { ...item, expiry_date };
+      });
+      setDetectedItems(itemsWithExpiry);
       setScanComplete(true);
       toast({
         title: 'Receipt Scanned Successfully!',
@@ -272,6 +283,7 @@ const ReceiptScanner = ({ onSuccess }: ReceiptScannerProps) => {
                       <TableHead>Category</TableHead>
                       <TableHead className="text-right">Quantity</TableHead>
                       <TableHead>Unit</TableHead>
+                      <TableHead>Estimated Expiry Date</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -321,6 +333,18 @@ const ReceiptScanner = ({ onSuccess }: ReceiptScannerProps) => {
                             />
                           ) : (
                             item.unit
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {editingIndex === index ? (
+                            <Input
+                              type="date"
+                              value={item.expiry_date || ''}
+                              onChange={(e) => handleEditItem(index, 'expiry_date', e.target.value)}
+                              className="h-8 w-32"
+                            />
+                          ) : (
+                            item.expiry_date || 'N/A'
                           )}
                         </TableCell>
                         <TableCell className="text-right">

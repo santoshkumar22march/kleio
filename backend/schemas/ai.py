@@ -12,6 +12,7 @@ class DetectedItem(BaseModel):
     unit: str = Field(..., description="Unit (kg, liters, pieces, etc.)")
     confidence: float = Field(..., ge=0, le=1, description="Detection confidence (0-1)")
     category: str = Field(default="others", description="Item category")
+    estimated_shelf_life_days: Optional[int] = Field(default=None, description="Estimated shelf life in days")
     
     class Config:
         json_schema_extra = {

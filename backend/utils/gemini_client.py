@@ -56,15 +56,15 @@ For each item, identify:
 2. Quantity (numeric value)
 3. Unit (kg, grams, liters, ml, pieces, packets, etc.)
 4. Confidence score (0.0 to 1.0)
+5. Category (vegetables, fruits, dairy, staples, etc.)
+6. Estimated shelf life in days (integer, e.g., 7 for milk, 90 for rice)
 
 IMPORTANT RULES:
-- Focus ONLY on grocery/food items (ignore non-food items like bags, batteries, etc.)
-- Convert all quantities to standard units: kg, grams, liters, ml, pieces, packets, dozens
-- If quantity is not clear, estimate based on typical purchase amounts
-- For items sold by count (eggs, bread), use "pieces" or "dozens"
-- For packaged items (chips, biscuits), use "packets"
-- Common Indian items: dal, atta, rice, oil, ghee, paneer, milk, vegetables, fruits, spices
-
+- Focus ONLY on grocery/food items.
+- Convert quantities to standard units.
+- Estimate shelf life based on typical household storage.
+- Estimate shelf life should be based on Inian products and Indian household storage, Indian weather conditions.
+- For example, pasteurized milk has a shelf life of 2 days in India, rice has a shelf life of 365 days in India.
 Return ONLY valid JSON array (no markdown, no explanation):
 [
   {
@@ -72,14 +72,16 @@ Return ONLY valid JSON array (no markdown, no explanation):
     "quantity": 2.0,
     "unit": "kg",
     "confidence": 0.95,
-    "category": "vegetables"
+    "category": "vegetables",
+    "estimated_shelf_life_days": 7
   },
   {
     "item_name": "toor dal",
     "quantity": 1.0,
     "unit": "kg",
     "confidence": 0.90,
-    "category": "pulses"
+    "category": "pulses",
+    "estimated_shelf_life_days": 365
   }
 ]
 
