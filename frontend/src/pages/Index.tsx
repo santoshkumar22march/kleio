@@ -7,6 +7,7 @@ import { Benefits } from "@/components/Benefits";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Reveal } from "@/components/Reveal";
 
 const Index = () => {
   const [loading, setLoading] = useState(true);
@@ -39,16 +40,18 @@ const Index = () => {
         ) : (
           <>
             <Hero />
-            <section id="features">
+            <Reveal as="section" id="features" className="container mx-auto px-4">
               <Features />
-            </section>
-            <section id="how-it-works">
+            </Reveal>
+            <Reveal as="section" id="how-it-works" className="container mx-auto px-4">
               <HowItWorks />
-            </section>
-            <section id="benefits">
+            </Reveal>
+            <Reveal as="section" id="benefits" className="container mx-auto px-4">
               <Benefits />
-            </section>
-            <CTA />
+            </Reveal>
+            <Reveal>
+              <CTA />
+            </Reveal>
           </>
         )}
       </main>

@@ -150,4 +150,11 @@ All colors MUST be HSL.
   .anim-delay-200 { animation-delay: 0.2s; }
   .anim-delay-1000 { animation-delay: 1s; }
   .anim-delay-2000 { animation-delay: 2s; }
+
+  /* Reveal on scroll */
+  .reveal-up { opacity: 0; transform: translateY(16px); }
+  .reveal-visible { opacity: 1; transform: translateY(0); transition: var(--transition-smooth); }
+
+  /* Parallax utility uses CSS var */
+  .parallax { will-change: transform; transform: translateY(var(--parallax-y, 0)); }
 }

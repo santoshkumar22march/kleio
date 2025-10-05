@@ -2,21 +2,26 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
+import { useParallax } from "@/hooks/useParallax";
 import heroImage from "@/assets/hero-kitchen.jpg";
 
 export const Hero = () => {
   const navigate = useNavigate();
   
+  const p1 = useParallax(0.12);
+  const p2 = useParallax(-0.08);
+  const p3 = useParallax(0.06);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Gradient Background */}
       <div className="absolute inset-0 gradient-hero opacity-10" />
-      
+
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float anim-delay-1000" />
-        <div className="absolute -top-24 right-1/3 w-[28rem] h-[28rem] gradient-accent opacity-[0.08] rounded-full blur-3xl animate-float anim-delay-2000" />
+        <div className="parallax absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-float" style={p1.style} />
+        <div className="parallax absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float anim-delay-1000" style={p2.style} />
+        <div className="parallax absolute -top-24 right-1/3 w-[28rem] h-[28rem] gradient-accent opacity-[0.08] rounded-full blur-3xl animate-float anim-delay-2000" style={p3.style} />
       </div>
 
       <div className="container mx-auto px-4 py-20 relative z-10">
@@ -94,7 +99,7 @@ export const Hero = () => {
           </div>
 
           {/* Right Image */}
-          <div className="relative animate-scale-in anim-delay-200">
+          <div className="relative animate-scale-in anim-delay-200 parallax" style={useParallax(0.04).style}>
             <div className="relative rounded-3xl overflow-hidden shadow-strong">
               <img 
                 src={heroImage} 
