@@ -94,7 +94,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 animate-in fade-in slide-in-from-bottom duration-700">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
@@ -104,7 +104,7 @@ const Signup = () => {
           <span className="text-2xl font-bold text-primary">Kleio.ai</span>
         </div>
 
-        <Card>
+        <Card className="glass-surface rounded-3xl shadow-strong hover:shadow-medium transition-smooth">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
             <CardDescription className="text-center">
@@ -164,7 +164,7 @@ const Signup = () => {
                     id="email"
                     type="email"
                     placeholder="you@example.com"
-                    className="pl-10"
+                    className="pl-10 input-premium"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading || googleLoading}
@@ -180,7 +180,7 @@ const Signup = () => {
                     id="password"
                     type="password"
                     placeholder="At least 6 characters"
-                    className="pl-10"
+                    className="pl-10 input-premium"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading || googleLoading}
@@ -196,7 +196,7 @@ const Signup = () => {
                     id="confirmPassword"
                     type="password"
                     placeholder="Confirm your password"
-                    className="pl-10"
+                    className="pl-10 input-premium"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={loading || googleLoading}
@@ -204,7 +204,7 @@ const Signup = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading || googleLoading}>
+              <Button type="submit" className="w-full btn-shine relative overflow-hidden" disabled={loading || googleLoading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -241,4 +241,3 @@ const Signup = () => {
 };
 
 export default Signup;
-
