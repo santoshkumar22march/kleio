@@ -79,10 +79,14 @@ const Login = () => {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-lg gradient-hero flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-lg overflow-hidden logo-glow bg-black">
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2Fa4d9f79155a04a9baf97dca7811d4917%2F91773bb5b01c46a9a1c43326a7726639?format=webp&width=160"
+              alt="Kleio.ai logo"
+              className="w-full h-full object-contain"
+            />
           </div>
-          <span className="text-2xl font-bold text-primary">Kleio.ai</span>
+          <span className="text-2xl font-bold logo-text">Kleio.ai</span>
         </div>
 
         <Card className="glass-surface rounded-3xl shadow-strong hover:shadow-medium transition-smooth">
