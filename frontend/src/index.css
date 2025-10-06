@@ -45,6 +45,9 @@ All colors MUST be HSL.
     --gradient-hero: linear-gradient(135deg, hsl(173 80% 40%) 0%, hsl(162 73% 46%) 50%, hsl(188 94% 40%) 100%);
     --gradient-feature: linear-gradient(135deg, hsl(173 80% 40% / 0.08) 0%, hsl(262 83% 57% / 0.08) 50%, hsl(37 92% 50% / 0.08) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(37 92% 50%) 0%, hsl(24 95% 50%) 100%);
+    /* Logo gradient (for logo text/accents) */
+    --logo-start: 199 89% 48%;
+    --logo-end: 187 92% 42%;
 
     /* Shadows tuned to teal */
     --shadow-soft: 0 4px 20px -2px hsl(173 80% 40% / 0.12);
