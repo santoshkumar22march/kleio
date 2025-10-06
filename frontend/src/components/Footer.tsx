@@ -8,10 +8,14 @@ export const Footer = () => {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg gradient-hero flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden logo-glow bg-black">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2Fa4d9f79155a04a9baf97dca7811d4917%2F91773bb5b01c46a9a1c43326a7726639?format=webp&width=128"
+                  alt="Kleio.ai logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="text-xl font-bold text-teal-400">
+              <span className="text-xl font-bold logo-text">
                 Kleio.ai
               </span>
             </div>
