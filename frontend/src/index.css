@@ -174,12 +174,24 @@ All colors MUST be HSL.
   }
   .btn-shine:hover::after { transform: translateX(120%); }
 
+  /* Nav show/hide */
+  .nav-bar { transition: transform 0.4s ease; }
+  .nav-hidden { transform: translateY(-100%); }
+  .nav-shown { transform: translateY(0); }
+
+  /* Hide scrollbars for custom scrollers */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
   /* Glass surface utility using theme tokens */
   .glass-surface {
     backdrop-filter: blur(24px);
     background: hsl(var(--card) / 0.7);
     border: 1px solid hsl(var(--border) / 0.5);
   }
+
+  /* Gooey filter helper */
+  .gooey-button { filter: url(#gooey); }
 
   /* Premium input utility (optional) */
   .input-premium { @apply bg-background/60 backdrop-blur-xl border-2 focus:ring-4; }

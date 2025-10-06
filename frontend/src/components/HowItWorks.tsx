@@ -44,33 +44,29 @@ export const HowItWorks = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-          {steps.map((step, index) => (
-            <div 
-              key={index} 
-              className="relative animate-fade-in-up"
-              style={{ animationDelay: `${index * 0.15}s` }}
-            >
-              {/* Step number */}
-              <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-xl shadow-medium">
-                {index + 1}
-              </div>
-
-              <div className="backdrop-blur-xl bg-white/80 border border-teal-100 rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-500 h-full space-y-4">
-                <div className={`w-16 h-16 rounded-2xl ${step.color} flex items-center justify-center`}>
-                  <step.icon className="w-8 h-8" />
+        <div className="no-scrollbar overflow-x-auto snap-x snap-mandatory pb-4">
+          <div className="flex gap-6 min-w-full pr-6">
+            {steps.map((step, index) => (
+              <div
+                key={index}
+                className="relative snap-center shrink-0 min-w-[85vw] md:min-w-[60vw] lg:min-w-[50vw]"
+              >
+                {/* Step number */}
+                <div className="absolute -top-4 -left-4 w-12 h-12 rounded-full gradient-hero flex items-center justify-center text-white font-bold text-xl shadow-medium">
+                  {index + 1}
                 </div>
 
-                <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
-                <p className="text-slate-600 leading-relaxed">{step.description}</p>
-              </div>
+                <div className="backdrop-blur-xl bg-white/80 border border-teal-100 rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:shadow-teal-500/10 transition-all duration-500 h-full space-y-4">
+                  <div className={`w-16 h-16 rounded-2xl ${step.color} flex items-center justify-center`}>
+                    <step.icon className="w-8 h-8" />
+                  </div>
 
-              {/* Connector line (except for last item) */}
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-primary/30 to-transparent" />
-              )}
-            </div>
-          ))}
+                  <h3 className="text-xl font-semibold text-slate-900">{step.title}</h3>
+                  <p className="text-slate-600 leading-relaxed">{step.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
