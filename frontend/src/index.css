@@ -166,6 +166,10 @@ All colors MUST be HSL.
   /* Parallax utility uses CSS var */
   .parallax { will-change: transform; transform: translateY(var(--parallax-y, 0)); }
 
+  /* Logo splash animation */
+  @keyframes logo-pop { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  .animate-logo-pop { animation: logo-pop 0.8s ease-out both; }
+
   /* Button shine effect */
   .btn-shine::after {
     content: "";
