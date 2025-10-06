@@ -198,4 +198,8 @@ All colors MUST be HSL.
 
   /* Premium input utility (optional) */
   .input-premium { @apply bg-background/60 backdrop-blur-xl border-2 focus:ring-4; }
+
+  /* Logo utilities */
+  .logo-text { background: linear-gradient(90deg, hsl(var(--logo-start)), hsl(var(--logo-end))); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .logo-glow { box-shadow: 0 0 0 1px hsl(var(--logo-end) / 0.3), 0 6px 24px hsl(var(--logo-end) / 0.35); }
 }
