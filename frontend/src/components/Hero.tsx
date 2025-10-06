@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,9 +12,29 @@ export const Hero = () => {
   const p1 = useParallax(0.12);
   const p2 = useParallax(-0.08);
   const p3 = useParallax(0.06);
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowSplash(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Logo Splash Overlay */}
+      <div className={`fixed inset-0 z-[70] flex items-center justify-center bg-black transition-opacity duration-700 ${showSplash ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="relative">
+          <div className="absolute -inset-16 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle at 50% 50%, hsla(var(--logo-start)/0.25), transparent 60%)' }} />
+          <img
+            src="https://cdn.builder.io/api/v1/image/assets%2Fa4d9f79155a04a9baf97dca7811d4917%2F91773bb5b01c46a9a1c43326a7726639?format=webp&width=512"
+            alt="Kleio.ai logo"
+            className="relative w-40 md:w-56 lg:w-64 animate-logo-pop drop-shadow-2xl"
+            loading="eager"
+            decoding="async"
+          />
+        </div>
+      </div>
+
       {/* Gradient Background */}
       <div className="absolute inset-0 gradient-hero opacity-10" />
 
